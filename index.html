@@ -84,8 +84,8 @@
 	.daybar button { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); cursor: pointer; border-left: 4px solid var(--k); color: var(--ink); }
 	.daybar button[aria-current="true"] { background: var(--ink); color: #fff; }
 	.hero { position: relative; border-radius: 14px; overflow: hidden; }
-	.hero .pic { aspect-ratio: 16 / 5; }
-	.hero .pic svg, .hero .pic img { width: 100%; height: 100%; object-fit: cover; }
+	.hero .pic { position: relative; aspect-ratio: 16 / 5; }
+	.hero .pic svg, .hero .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 	.hero .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 20px 14px; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; }
 	.hero h2 { font-size: 28px; }
 	.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin: 14px 0; }
