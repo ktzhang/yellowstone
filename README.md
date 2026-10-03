@@ -7,8 +7,8 @@ An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip 
 - **Day by day:** each day's timed rundown, stop cards and route map, plus a Thu–Sat swap for picking the Grand Teton day.
 - **Field log:** a wildlife spotting log that records who spotted each animal and keeps a family tally, plus every day's field notes in one place, downloadable as text.
 - **Checklist & packing:** reconfirmation tasks, an October packing list, and confirmed travel and lodging.
-- **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, and settings (appearance including dark mode, text size, clear saved data).
-- **Everywhere:** a Now / Next banner on trip days, a trip progress bar, search across the whole guide (⌘K / Ctrl+K or `/`), favorite exhibits, badges in the Field log, and share links for days and exhibits.
+- **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, and settings (appearance including dark mode, text size, animal tracks, clear saved data).
+- **Everywhere:** a Now / Next banner on trip days, a trip progress bar, search across the whole guide (⌘K / Ctrl+K or `/`), favorite exhibits, badges in the Field log, share links for days and exhibits, and bear, moose, fox, hare, squirrel and raven tracks that walk across the page (Walking, Still or Off in Settings).
 - Each day page also has route length, sunrise, sunset and golden-hour times, a field-notes box, and a "Print this day" link. Links like `#day/teton` or `#exhibit/oxbow` open a page directly, and the browser back button works.
 
 Exhibit groupings live in `ROOMS`, and the "Look for" lists in `LOOK`.
