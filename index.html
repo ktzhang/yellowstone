@@ -466,8 +466,8 @@
 	<div class="tripbar" id="tripbar" aria-hidden="true"><span></span></div>
 	<div class="nownext" id="nownext" hidden></div>
 	<nav class="tabs" role="tablist" aria-label="Sections">
-		<button class="tab" role="tab" data-view="museum" aria-selected="true">Explore exhibits</button>
-		<button class="tab" role="tab" data-view="overview" aria-selected="false">Trip overview</button>
+		<button class="tab" role="tab" data-view="overview" aria-selected="true">Trip overview</button>
+		<button class="tab" role="tab" data-view="museum" aria-selected="false">Explore exhibits</button>
 		<button class="tab" role="tab" data-view="day" aria-selected="false">Day by day</button>
 		<button class="tab" role="tab" data-view="log" aria-selected="false">Field log</button>
 		<button class="tab" role="tab" data-view="prep" aria-selected="false">Checklist &amp; packing</button>
@@ -481,11 +481,11 @@
 </header>
 
 <main id="main" tabindex="-1">
-<section class="view active" id="view-museum">
+<section class="view" id="view-museum">
 	<div id="museum"></div>
 </section>
 
-<section class="view" id="view-overview">
+<section class="view active" id="view-overview">
 	<div class="ov">
 		<div class="panel">
 			<svg id="ovmap" role="img" aria-label="Map of the whole trip with every day's route"></svg>

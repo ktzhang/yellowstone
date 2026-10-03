@@ -2,8 +2,8 @@
 
 An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip with Kevin, Elena, Bing, Ken and Helen. It has:
 
-- **Explore exhibits:** a museum-style tour where every place is an exhibit, grouped into five galleries. Each exhibit has a placard, key facts, things to look for and an audio guide, and you can stamp a trip passport as you visit.
 - **Trip overview:** a map of the whole trip with every day's route, plus the travelers.
+- **Explore exhibits:** a museum-style tour where every place is an exhibit, grouped into five galleries. Each exhibit has a placard, key facts, things to look for and an audio guide, and you can stamp a trip passport as you visit.
 - **Day by day:** each day's timed rundown, stop cards and route map, plus a Thu–Sat swap for picking the Grand Teton day.
 - **Field log:** a wildlife spotting log that records who spotted each animal and keeps a family tally, plus every day's field notes in one place, downloadable as text.
 - **Checklist & packing:** reconfirmation tasks, an October packing list, and confirmed travel and lodging.
