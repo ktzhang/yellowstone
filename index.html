@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yellowstone &amp; Grand Teton Trip Guide</title>
-<meta name="description" content="A museum-style guide to our Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
-<meta property="og:title" content="Yellowstone &amp; Grand Teton Trip Guide">
-<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the trip.">
+<title>Zhang Family Trip · Yellowstone &amp; Grand Teton</title>
+<meta name="description" content="A museum-style guide to the Zhang family's Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
+<meta property="og:title" content="Zhang Family Trip · Yellowstone &amp; Grand Teton">
+<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the Zhang family trip.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#f5f1e8">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6b5e'/%3E%3Cpath d='M14 26 Q15 14 16 5 Q17 14 18 26Z' fill='%23fffdf8'/%3E%3Cellipse cx='16' cy='26' rx='9' ry='2.5' fill='%23e4dccd'/%3E%3C/svg%3E">
@@ -445,13 +445,21 @@
 	table { width: 100%; border-collapse: collapse; font-size: 14px; }
 	td { padding: 7px 4px; border-top: 1px solid var(--line); vertical-align: top; }
 	td:first-child { white-space: nowrap; font-weight: 600; padding-right: 12px; }
+	/* Travelers */
+	.members { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 0; padding: 0; }
+	.members li { display: flex; align-items: center; gap: 7px; font-weight: 600; }
+	.avatar { width: 28px; height: 28px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; font: 600 13px/1 var(--display); }
+	.who { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+	.who .small { flex-basis: 100%; }
+	.who .btn { padding-inline: 11px; }
+	.who .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="wrap">
 	<div class="topline">
-		<h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1>
+		<div><div class="kicker">The Zhang Family Trip</div><h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1></div>
 		<button class="btn searchbtn" id="searchbtn" aria-haspopup="dialog" aria-controls="searchpanel"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Search</span><kbd>⌘K</kbd></button>
 	</div>
 	<p class="sub" id="clock"></p>
@@ -488,6 +496,7 @@
 			<div class="panel">
 				<h2 class="ov-title">Ten days, two parks</h2>
 				<p class="lead-p">You'll start at Yellowstone's north gate in Gardiner, spend six nights in Island Park once Elena and Bing arrive, and finish in Bozeman. The big sights (geysers, the canyon and the Tetons) are saved for Thursday through Saturday so everyone can go together.</p>
+				<div id="family"></div>
 				<div class="stats" id="stats"></div>
 				<div class="phases">
 					<div class="phase" style="--k:var(--north)"><b>Oct 3–4 · Gardiner</b>Mammoth's terraces and Lamar Valley wildlife.</div>
@@ -538,6 +547,10 @@
 </main>
 
 <script>
+// ---------- Travelers: the default names for expenses, sightings and trivia ----------
+const FAMILY = ["Kevin", "Elena", "Bing", "Ken", "Helen"];
+const FAMILY_COLORS = ["#2f6b5e", "#a8573a", "#41708a", "#6a5f86", "#8a6a2f"];
+
 // ---------- Places: lat, lon, name, scene, intro, facts ----------
 const P = {
 	bzn: { ll: [45.777, -111.153], name: "Bozeman Yellowstone Airport", scene: "airport", label: "BZN",
@@ -959,6 +972,8 @@ function renderOverview() {
 	const places = new Set(days.flatMap(d => d.stops.map(s => s[0])));
 	document.getElementById("stats").innerHTML =
 		[[days.length, "days"], [2, "national parks"], [places.size, "places"], [3, "home bases"]].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+	document.getElementById("family").innerHTML = `<b class="section-label">The Zhang family</b>
+		<ul class="members" aria-label="Travelers">${people().map((p, i) => `<li><span class="avatar" style="--c:${FAMILY_COLORS[i % FAMILY_COLORS.length]}" aria-hidden="true">${esc([...p][0].toUpperCase())}</span>${esc(p)}</li>`).join("")}</ul>`;
 	const today = mtToday();
 	document.getElementById("cards").innerHTML = days.map((d, i) => `
 		<button class="dcard" style="--k:${KIND[d.kind].color};--i:${i}" data-open="${d.id}">
@@ -1113,8 +1128,9 @@ const WILDLIFE = [
 	["otter", "River otter", "Oxbow Bend and the Lamar River."]
 ];
 function renderLog() {
-	const seen = store.wild || {}, notes = store.notes || {};
+	const seen = store.wild || {}, notes = store.notes || {}, by = store.spottedBy || {};
 	const n = WILDLIFE.filter(([id]) => seen[id]).length;
+	const tally = people().map(p => [p, WILDLIFE.filter(([id]) => seen[id] && by[id] === p).length]).filter(([, c]) => c).sort((a, b) => b[1] - a[1]);
 	const days = allDays();
 	const written = days.filter(d => (notes[d.id] || "").trim());
 	document.getElementById("fieldlog").innerHTML = `
@@ -1123,10 +1139,12 @@ function renderLog() {
 				<div class="kicker">Spotting log</div>
 				<h2 class="ov-title">${n} of ${WILDLIFE.length} animals spotted</h2>
 				<p class="lead-p">Tap an animal when you see it. Keep at least 100 yards from bears and wolves and 25 yards from everything else.</p>
+				${whoHtml("Who's spotting?", "data-spotter", pickedPerson("spotter"))}
+				${tally.length ? `<p class="small mt-8">Family tally: ${tally.map(([p, c]) => `${esc(p)} ${c}`).join(" · ")}</p>` : ""}
 				<div class="wildgrid">${WILDLIFE.map(([id, name, where], i) => `
 					<button class="wild ${seen[id] ? "on" : ""}" data-wild="${id}" aria-pressed="${!!seen[id]}" style="--i:${i}">
 						<span class="wname">${esc(name)}</span>
-						<span class="small">${seen[id] ? "Spotted " + esc(seen[id]) : esc(where)}</span>
+						<span class="small">${seen[id] ? "Spotted " + esc(seen[id]) + (by[id] ? " · " + esc(by[id]) : "") : esc(where)}</span>
 					</button>`).join("")}</div>
 			</section>
 			<section class="panel">
@@ -1142,20 +1160,30 @@ function renderLog() {
 		${badgesHtml()}`;
 }
 function exportText() {
-	const seen = store.wild || {}, notes = store.notes || {};
-	let t = "Yellowstone & Grand Teton, Oct 3–12, 2026\n\nWILDLIFE SPOTTED\n";
-	for (const [id, name] of WILDLIFE) if (seen[id]) t += `- ${name} (${seen[id]})\n`;
+	const seen = store.wild || {}, notes = store.notes || {}, by = store.spottedBy || {};
+	let t = "The Zhang family · Yellowstone & Grand Teton, Oct 3–12, 2026\n\nWILDLIFE SPOTTED\n";
+	for (const [id, name] of WILDLIFE) if (seen[id]) t += `- ${name} (${seen[id]}${by[id] ? ", " + by[id] : ""})\n`;
 	t += "\nFIELD NOTES\n";
 	for (const d of allDays()) if ((notes[d.id] || "").trim()) t += `\n${d.date}: ${d.title}\n${notes[d.id].trim()}\n`;
 	return t;
 }
 document.getElementById("fieldlog").addEventListener("click", async e => {
+	const sp = e.target.closest("[data-spotter]");
+	if (sp) {
+		const p = sp.dataset.spotter;
+		if (store.spotter === p) delete store.spotter; else store.spotter = p;
+		save(); renderLog();
+		return document.querySelector(`[data-spotter="${CSS.escape(p)}"]`).focus();
+	}
 	const w = e.target.closest("[data-wild]");
 	if (w) {
-		const id = w.dataset.wild, seen = { ...(store.wild || {}) };
-		if (seen[id]) delete seen[id];
-		else seen[id] = new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", month: "short", day: "numeric" }).format(new Date());
-		store.wild = seen; save(); renderLog();
+		const id = w.dataset.wild, seen = { ...(store.wild || {}) }, by = { ...(store.spottedBy || {}) };
+		if (seen[id]) { delete seen[id]; delete by[id]; }
+		else {
+			seen[id] = new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", month: "short", day: "numeric" }).format(new Date());
+			if (pickedPerson("spotter")) by[id] = pickedPerson("spotter");
+		}
+		store.wild = seen; store.spottedBy = by; save(); renderLog();
 		return document.querySelector(`[data-wild="${id}"]`).focus();
 	}
 	const o = e.target.closest("[data-open]");
@@ -1165,9 +1193,9 @@ document.getElementById("fieldlog").addEventListener("click", async e => {
 		try {
 			const a = document.createElement("a");
 			a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-			a.download = "yellowstone-field-notes.txt";
+			a.download = "zhang-family-field-notes.txt";
 			document.body.appendChild(a); a.click(); a.remove();
-			status.textContent = "Downloaded yellowstone-field-notes.txt.";
+			status.textContent = "Downloaded zhang-family-field-notes.txt.";
 		} catch (err) {
 			status.textContent = "This viewer blocks downloads.";
 		}
@@ -1311,7 +1339,7 @@ document.addEventListener("click", e => { if (!e.target.closest?.("#searchpanel,
 async function shareCurrent(title) {
 	const url = location.href, status = document.getElementById("sharestatus");
 	try {
-		if (navigator.share) { await navigator.share({ title: title + " · Yellowstone trip guide", url }); return; }
+		if (navigator.share) { await navigator.share({ title: title + " · Zhang family trip guide", url }); return; }
 		await navigator.clipboard.writeText(url);
 		if (status) status.textContent = "Link copied.";
 	} catch (e) {
@@ -1356,12 +1384,16 @@ const QUIZ = [
 ];
 let quiz = { i: 0, score: 0, answered: null };
 function quizHtml() {
+	const player = pickedPerson("quizPlayer"), best = store.quizBestBy || {};
+	const board = people().filter(p => p in best).sort((a, b) => best[b] - best[a]);
+	const boardHtml = board.length ? `<p class="small">Family scoreboard: ${board.map(p => `${esc(p)} ${best[p]}`).join(" · ")}</p>` : "";
 	if (quiz.i >= QUIZ.length) {
-		return `<p class="lead-p"><b>${quiz.score} of ${QUIZ.length}</b> correct. ${quiz.score >= 8 ? "That earns the Trivia ranger badge." : "Score 8 or more to earn the Trivia ranger badge."}</p>
-			<p class="small">Best score: ${store.quizBest || 0}</p><button class="btn primary" data-quiz="restart">Play again</button>`;
+		return `<p class="lead-p"><b>${player ? esc(player) + ": " : ""}${quiz.score} of ${QUIZ.length}</b> correct. ${quiz.score >= 8 ? "That earns the Trivia ranger badge." : "Score 8 or more to earn the Trivia ranger badge."}</p>
+			${boardHtml || `<p class="small">Best score: ${store.quizBest || 0}</p>`}<button class="btn primary" data-quiz="restart">Play again</button>`;
 	}
 	const [q, opts, right, why] = QUIZ[quiz.i];
-	return `<div class="small">Question ${quiz.i + 1} of ${QUIZ.length} · Score ${quiz.score}</div>
+	return `${quiz.i === 0 && quiz.answered === null ? whoHtml("Who's playing?", "data-quizplayer", player) + boardHtml : ""}
+		<div class="small ${quiz.i === 0 && quiz.answered === null ? "mt-16" : ""}">Question ${quiz.i + 1} of ${QUIZ.length} · Score ${quiz.score}${player ? " · " + esc(player) : ""}</div>
 		<p class="quizq">${esc(q)}</p>
 		<div class="quizopts">${opts.map((o, j) => {
 			const cls = quiz.answered === null ? "" : j === right ? "right" : j === quiz.answered ? "wrong" : "";
@@ -1388,7 +1420,11 @@ function geyserOut() {
 
 // ---------- Tools: expense splitter ----------
 const money = n => "$" + n.toFixed(2);
-function people() { return (store.people || ["You", "Elena", "Bing"]).filter(Boolean); }
+function people() { return (store.people || FAMILY).filter(Boolean); }
+function pickedPerson(key) { return people().includes(store[key]) ? store[key] : null; }
+function whoHtml(label, attr, picked) {
+	return `<div class="who" role="group" aria-label="${label}"><span class="small">${label}</span>${people().map(p => `<button class="btn" ${attr}="${esc(p)}" aria-pressed="${picked === p}">${esc(p)}</button>`).join("")}</div>`;
+}
 function balances() {
 	const ppl = people(), bal = Object.fromEntries(ppl.map(p => [p, 0]));
 	for (const x of store.expenses || []) {
@@ -1482,12 +1518,24 @@ function renderTools() {
 }
 const toolsEl = document.getElementById("tools");
 toolsEl.addEventListener("click", e => {
+	const qp = e.target.closest("[data-quizplayer]");
+	if (qp) {
+		const p = qp.dataset.quizplayer;
+		if (store.quizPlayer === p) delete store.quizPlayer; else store.quizPlayer = p;
+		save(); document.getElementById("quiz").innerHTML = quizHtml();
+		return document.querySelector(`#quiz [data-quizplayer="${CSS.escape(p)}"]`).focus();
+	}
 	const q = e.target.closest("[data-quiz]");
 	if (q) {
 		const v = q.dataset.quiz;
 		if (v === "restart") quiz = { i: 0, score: 0, answered: null };
 		else if (v === "next") { quiz.i++; quiz.answered = null; }
-		else { quiz.answered = +v; if (+v === QUIZ[quiz.i][2]) quiz.score++; if (quiz.i === QUIZ.length - 1) { store.quizBest = Math.max(store.quizBest || 0, quiz.score); save(); } }
+		else { quiz.answered = +v; if (+v === QUIZ[quiz.i][2]) quiz.score++; if (quiz.i === QUIZ.length - 1) {
+			store.quizBest = Math.max(store.quizBest || 0, quiz.score);
+			const p = pickedPerson("quizPlayer");
+			if (p) store.quizBestBy = { ...(store.quizBestBy || {}), [p]: Math.max((store.quizBestBy || {})[p] || 0, quiz.score) };
+			save();
+		} }
 		document.getElementById("quiz").innerHTML = quizHtml();
 		return (document.querySelector("#quiz [data-quiz='next'], #quiz [data-quiz='restart']") || document.querySelector("#quiz .quizopt"))?.focus();
 	}
@@ -1630,10 +1678,10 @@ function renderMuseum() {
 		el.innerHTML = `<div class="lobby"><div>
 			<section class="panel lobby-intro">
 				<div class="lobby-art" aria-hidden="true">${scene("tetons")}</div>
-				<div class="kicker">Welcome to the museum</div>
+				<div class="kicker">Welcome to the Zhang Family Museum</div>
 				<h2>${EX_ORDER.length} exhibits in ${ROOMS.length} galleries</h2>
-				<p class="lead-p">Every place on your trip is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
-				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>Trip passport</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
+				<p class="lead-p">Every place on the Zhang family's trip is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
+				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>Zhang family passport</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
 				<input class="search" id="exsearch" type="search" placeholder="Search exhibits, e.g. bison, waterfall, 308 ft" value="${esc(museumQuery)}" aria-label="Search exhibits">
 				<div class="daynav start mt-8"><button class="btn ${favOnly ? "stamped" : ""}" data-favfilter="1" aria-pressed="${favOnly}" ${nFav || favOnly ? "" : "disabled"}>♥ Favorites only (${nFav})</button></div>
 			</section>
