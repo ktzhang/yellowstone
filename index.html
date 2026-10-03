@@ -84,8 +84,8 @@
 	.daybar button { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); cursor: pointer; border-left: 4px solid var(--k); color: var(--ink); }
 	.daybar button[aria-current="true"] { background: var(--ink); color: #fff; }
 	.hero { position: relative; border-radius: 14px; overflow: hidden; }
-	.hero .pic { aspect-ratio: 16 / 5; }
-	.hero .pic svg, .hero .pic img { width: 100%; height: 100%; object-fit: cover; }
+	.hero .pic { position: relative; aspect-ratio: 16 / 5; }
+	.hero .pic svg, .hero .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 	.hero .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 20px 14px; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; }
 	.hero h2 { font-size: 28px; }
 	.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin: 14px 0; }
@@ -805,7 +805,7 @@ function scene(type) {
 	return `<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${S[type] || S.road}</svg>`;
 }
 // Real photos: add img/<placeKey>.jpg next to index.html and list the key here; it replaces the illustration.
-const PHOTOS = new Set([]);
+const PHOTOS = new Set(["bzn", "bozeman", "livingston", "paradise", "gardiner", "arch", "mammoth", "tower", "lamar", "bigsky", "westy", "mesa", "madison", "gibbon", "norris", "midway", "oldfaithful", "craig", "canyon", "artist", "hayden", "mud", "westthumb", "south", "jackson", "oxbow", "jenny"]);
 const pic = key => scene(P[key].scene) + (PHOTOS.has(key) ? `<img src="img/${key}.jpg" alt="${esc(P[key].name)}" onerror="this.remove()">` : "");
 
 // ---------- Map ----------
@@ -976,7 +976,7 @@ function renderDay() {
 	const idx = days.findIndex(d => d.id === currentDay), d = days[idx], k = KIND[d.kind];
 	const today = mtToday();
 	document.getElementById("daybar").innerHTML = days.map(x =>
-		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date.slice(4)}${x.iso === today ? " •" : ""}</button>`).join("");
+		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date}${x.iso === today ? " •" : ""}</button>`).join("");
 	const swap = d.slot === undefined ? "" : `<div class="panel mt-16"><h3>Swap this day</h3>
 		<div class="small">Swap only within Thu–Sat so your friends can join. Put Grand Teton on the clearest day.</div>
 		<div class="daynav start mt-8">
