@@ -805,7 +805,7 @@ function scene(type) {
 	return `<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${S[type] || S.road}</svg>`;
 }
 // Real photos: add img/<placeKey>.jpg next to index.html and list the key here; it replaces the illustration.
-const PHOTOS = new Set([]);
+const PHOTOS = new Set(["bzn", "bozeman", "livingston", "paradise", "gardiner", "arch", "mammoth", "tower", "lamar", "bigsky", "westy", "mesa", "madison", "gibbon", "norris", "midway", "oldfaithful", "craig", "canyon", "artist", "hayden", "mud", "westthumb", "south", "jackson", "oxbow", "jenny"]);
 const pic = key => scene(P[key].scene) + (PHOTOS.has(key) ? `<img src="img/${key}.jpg" alt="${esc(P[key].name)}" onerror="this.remove()">` : "");
 
 // ---------- Map ----------

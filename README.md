@@ -43,4 +43,6 @@ All the trip data lives in the `<script>` block of `index.html`:
 
 Map credits: Basemap © Esri, USGS, NPS and other contributors. Roads © OpenStreetMap contributors, routed with OSRM.
 
+Photo credits: 27 photos from Wikimedia Commons, used under public-domain and Creative Commons licenses. See [`img/CREDITS.md`](img/CREDITS.md) for each author and license.
+
 Progress and checkmarks are saved in the browser's `localStorage` under the key `ys-guide`.
