@@ -976,7 +976,7 @@ function renderDay() {
 	const idx = days.findIndex(d => d.id === currentDay), d = days[idx], k = KIND[d.kind];
 	const today = mtToday();
 	document.getElementById("daybar").innerHTML = days.map(x =>
-		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date.slice(4)}${x.iso === today ? " •" : ""}</button>`).join("");
+		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date}${x.iso === today ? " •" : ""}</button>`).join("");
 	const swap = d.slot === undefined ? "" : `<div class="panel mt-16"><h3>Swap this day</h3>
 		<div class="small">Swap only within Thu–Sat so Elena and Bing can join. Put Grand Teton on the clearest day.</div>
 		<div class="daynav start mt-8">
