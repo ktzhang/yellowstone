@@ -460,6 +460,16 @@
 		.ovmapwrap .legend { flex-direction: column; flex-wrap: nowrap; margin-top: 0; }
 		.ovmapwrap .legend button { text-align: left; }
 	}
+	/* Expandable maps */
+	.mapbox { position: relative; }
+	.mapexpand { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; font-size: 13px; }
+	.mapexpand svg { width: 14px; height: 14px; flex: none; }
+	.mapdialog { width: min(96vw, 1100px); max-width: none; height: 94vh; height: 94dvh; max-height: none; padding: 12px; border: 0; border-radius: var(--r-lg); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lift); }
+	.mapdialog[open] { display: flex; flex-direction: column; gap: 10px; }
+	.mapdialog::backdrop { background: rgba(20, 16, 10, .62); }
+	.mapdialog-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+	.mapdialog-bar h2 { font-size: 18px; margin: 0; }
+	.mapdialog > svg { flex: 1; min-height: 0; height: 100%; }
 </style>
 </head>
 <body>
@@ -496,7 +506,8 @@
 	<div class="ov">
 		<div class="panel ovpanel">
 			<div class="ovmapwrap">
-				<svg id="ovmap" role="img" aria-label="Map of the whole trip with every day's route"></svg>
+				<div class="mapbox"><svg id="ovmap" role="img" aria-label="Map of the whole trip with every day's route"></svg>
+					<button class="btn mapexpand" data-expand="ovmap" aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Expand map</button></div>
 				<div class="legend" id="ovlegend"></div>
 			</div>
 			<div class="small note-sm">Hover or tap a day to highlight its route; click a route to open that day. ⌂ marks where you sleep. Routes follow real roads; use a navigation app and NPS road status while driving.</div>
@@ -554,6 +565,10 @@
 	</div>
 </section>
 </main>
+<dialog class="mapdialog" id="mapdialog" aria-labelledby="mapdialog-title">
+	<div class="mapdialog-bar"><h2 id="mapdialog-title">Map</h2><button class="btn" data-closemap="1">Close</button></div>
+	<svg id="mapbig" role="img" aria-label="Expanded map"></svg>
+</dialog>
 
 <script>
 // ---------- Travelers: the default names for expenses, sightings and trivia ----------
@@ -1037,7 +1052,8 @@ function renderDay() {
 				</section>
 			</div>
 			<div class="stack">
-				<div class="panel"><svg id="daymap" role="img" aria-label="Map of this day's route"></svg>
+				<div class="panel"><div class="mapbox"><svg id="daymap" role="img" aria-label="Map of this day's route"></svg>
+					<button class="btn mapexpand" data-expand="daymap" aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Expand map</button></div>
 					<div class="small mt-8">Numbers match the stops below. Dashed markers are optional.</div></div>
 				${sunPanel(d)}
 			</div>
@@ -1338,6 +1354,7 @@ document.getElementById("gresults").addEventListener("keydown", e => {
 	if (e.key === "ArrowUp") { e.preventDefault(); (i > 0 ? all[i - 1] : document.getElementById("gsearch")).focus(); }
 });
 document.addEventListener("keydown", e => {
+	if (mapDialog.open) return;
 	const typing = e.target.closest?.("input, textarea, select");
 	if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing)) { e.preventDefault(); openSearch(); }
 	if (e.key === "Escape" && !document.getElementById("searchpanel").hidden) { closeSearch(); document.getElementById("searchbtn").focus(); }
@@ -1792,6 +1809,48 @@ document.getElementById("museum").addEventListener("click", e => {
 	if (t.dataset.hush) speechSynthesis.cancel();
 });
 
+// ---------- Expanded map ----------
+const mapDialog = document.getElementById("mapdialog");
+let mapOpener = null;
+function expandMap(btn) {
+	const src = document.getElementById(btn.dataset.expand), big = document.getElementById("mapbig"), d = allDays().find(x => x.id === currentDay);
+	big.setAttribute("aria-label", src.getAttribute("aria-label"));
+	big.innerHTML = src.innerHTML;
+	big.querySelector(":scope > text:last-of-type")?.remove(); // the credit; fitBigMap redraws it in the new corner
+	document.getElementById("mapdialog-title").textContent = btn.dataset.expand === "daymap" ? `${d.date}: ${d.title}` : "The whole trip";
+	mapOpener = btn;
+	mapDialog.showModal();
+	fitBigMap(src.viewBox.baseVal);
+}
+// Grow the source view to the dialog's shape (within the basemap) so the map fills it and the credit stays in the corner.
+let bigFrom = null;
+function fitBigMap(from = bigFrom) {
+	if (!from) return;
+	bigFrom = { x: from.x, y: from.y, width: from.width, height: from.height };
+	const big = document.getElementById("mapbig"), r = big.getBoundingClientRect(), a = r.height / r.width;
+	let { x, y, width: w, height: h } = bigFrom;
+	if (h / w < a) { const nh = Math.min(w * a, H); y = Math.max(0, Math.min(y - (nh - h) / 2, H - nh)); h = nh; }
+	else { const nw = Math.min(h / a, 400); x = Math.max(0, Math.min(x - (nw - w) / 2, 400 - nw)); w = nw; }
+	const vb = { x, y, w, h };
+	setView(big, vb);
+	big.querySelector(".bigcredit")?.remove();
+	big.insertAdjacentHTML("beforeend", credit(vb, bigFrom.width / 400).replace("<text ", '<text class="bigcredit" '));
+}
+window.addEventListener("resize", () => { if (mapDialog.open) fitBigMap(); });
+document.addEventListener("click", e => {
+	const x = e.target.closest("[data-expand]");
+	if (x) return expandMap(x);
+	if (!mapDialog.open) return;
+	const r = e.target.closest("#mapbig .map-route");
+	if (r) { mapDialog.close(); return openDay(r.dataset.day); }
+	if (e.target.closest("[data-closemap]")) return mapDialog.close();
+	if (e.target === mapDialog) {
+		const b = mapDialog.getBoundingClientRect();
+		if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) mapDialog.close();
+	}
+});
+mapDialog.addEventListener("close", () => { mapOpener?.focus(); mapOpener = null; });
+
 // ---------- Wiring ----------
 function showView(v, push = true) {
 	if (v === "log") renderLog();
@@ -1857,7 +1916,7 @@ document.getElementById("daypage").addEventListener("input", e => {
 	}, 400);
 });
 document.addEventListener("keydown", e => {
-	if (!document.getElementById("view-day").classList.contains("active") || e.target.closest?.("input, textarea, select")) return;
+	if (!document.getElementById("view-day").classList.contains("active") || mapDialog.open || e.target.closest?.("input, textarea, select")) return;
 	const days = allDays(), i = days.findIndex(d => d.id === currentDay);
 	if (e.key === "ArrowRight" && i < days.length - 1) openDay(days[i + 1].id);
 	if (e.key === "ArrowLeft" && i > 0) openDay(days[i - 1].id);
