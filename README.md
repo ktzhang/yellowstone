@@ -4,7 +4,7 @@ An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip 
 
 - **Trip overview:** a map of the whole trip with every day's route, plus the travelers.
 - **Explore exhibits:** a museum-style tour where every place is an exhibit, grouped into five galleries. Each exhibit has a placard, key facts, things to look for and an audio guide, and you can stamp a trip passport as you visit.
-- **Day by day:** each day's timed rundown, stop cards and route map, plus a Thu–Sat swap for picking the Grand Teton day.
+- **Day by day:** each day's timed rundown, stop cards with a tour guide (background, more facts and a Listen button) and route map, plus a Thu–Sat swap for picking the Grand Teton day.
 - **Field log:** a wildlife spotting log that records who spotted each animal and keeps a family tally, plus every day's field notes in one place, downloadable as text.
 - **Checklist & packing:** reconfirmation tasks, an October packing list, and confirmed travel and lodging.
 - **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, and settings (appearance including dark mode, text size, clear saved data).
@@ -50,6 +50,7 @@ All the trip data lives in the `<script>` block of `index.html`:
 
 - `FAMILY`: the travelers' names from the private link, used by the expense splitter, the spotting log and trivia. You can also change them in the app under **Tools → Split expenses → Edit travelers**.
 - `P`: places, as `[lat, lon, name, introduction]`.
+- `GUIDE`: each place's background story and extra facts, shown on the day pages and exhibits.
 - `FIXED`, `SHARED`, `TAIL`: days, each with a route `path` (place keys), `stops` (`[placeKey, plan, optional?]`), times and tips.
 - `SHARED_DATES`: the dates whose days can be swapped with each other.
 - `BOOKINGS`, `CHECKS`: the booking table and the checklist.
