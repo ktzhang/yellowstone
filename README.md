@@ -9,6 +9,7 @@ An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip 
 - **Checklist & packing:** reconfirmation tasks, an October packing list, and confirmed travel and lodging.
 - **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, and settings (appearance including dark mode, text size, clear saved data).
 - **Everywhere:** a Now / Next banner on trip days, a trip progress bar, search across the whole guide (⌘K / Ctrl+K or `/`), favorite exhibits, badges in the Field log, and share links for days and exhibits.
+- **Offline:** opened from a website, the guide saves itself, its photos and fonts on the device and keeps working without signal. It can also be added to the home screen.
 - Each day page also has route length, sunrise, sunset and golden-hour times, a field-notes box, and a "Print this day" link. Links like `#day/teton` or `#exhibit/oxbow` open a page directly, and the browser back button works.
 
 Exhibit groupings live in `ROOMS`, and the "Look for" lists in `LOOK`.
@@ -19,11 +20,15 @@ Exhibit groupings live in `ROOMS`, and the "Look for" lists in `LOOK`.
 |---|---|
 | `index.html` | The whole app: HTML, CSS, JS and trip data. It has no dependencies and no build step. |
 | `README.md` | This page. |
+| `sw.js` | Offline support: saves the guide, photos and fonts on the first visit, then serves them from the device. |
+| `manifest.webmanifest`, `icons/` | Name and icons for adding the guide to a home screen. |
 | `img/<place>.jpg` | Optional photos, for example `img/oldfaithful.jpg` or `img/oxbow.jpg`. The keys are the names in `P`. Add each key to the `PHOTOS` set in `index.html` too; the photo then replaces that place's drawn illustration. |
 
 ## Run it locally
 
 Open `index.html` in any browser. That's all you need.
+
+Offline saving only works when the guide is served from a website. To try it locally, run `python3 -m http.server` in this folder and open http://localhost:8000.
 
 ## Create the repo
 
