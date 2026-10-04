@@ -470,6 +470,21 @@
 	.mapdialog-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 	.mapdialog-bar h2 { font-size: 18px; margin: 0; }
 	.mapdialog > svg { flex: 1; min-height: 0; height: 100%; }
+	/* Weather */
+	.wxslot { display: contents; }
+	.wx h3 { margin-bottom: 2px; }
+	.wxlist { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+	.wxlist li { display: flex; gap: 10px; align-items: flex-start; }
+	.wxn { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; background: var(--k); color: #fff; font-size: 11px; font-weight: 700; }
+	.wxsky { color: var(--muted); }
+	.wxstale { color: var(--ink); }
+	.wxtable th { text-align: left; font-weight: 500; font-size: 12.5px; color: var(--muted); padding: 4px; }
+	.wxtable td { font-size: 13px; font-variant-numeric: tabular-nums; }
+	.wxtable td:first-child { white-space: normal; }
+	.wxdate { white-space: nowrap; }
+	.wxtable tr.best td { background: var(--accent-soft); }
+	.wx .small a, .wxnow .small a, #wxswap .small a, .wxalerts .small a { color: inherit; }
+	.wxalerts { flex-basis: 100%; padding: 8px 12px; border-left: 3px solid #b5523b; border-radius: var(--r-xs); background: var(--card); }
 </style>
 </head>
 <body>
@@ -1020,7 +1035,8 @@ function renderDay() {
 		<div class="small">Swap only within Thu–Sat so Elena and Bing can join. Put Grand Teton on the clearest day.</div>
 		<div class="daynav start mt-8">
 			<button class="btn" data-move="-1" ${d.slot === 0 ? "disabled" : ""}>◀ Move to ${SHARED_DATES[d.slot - 1]?.[1] ?? "—"}</button>
-			<button class="btn" data-move="1" ${d.slot === 2 ? "disabled" : ""}>Move to ${SHARED_DATES[d.slot + 1]?.[1] ?? "—"} ▶</button></div></div>`;
+			<button class="btn" data-move="1" ${d.slot === 2 ? "disabled" : ""}>Move to ${SHARED_DATES[d.slot + 1]?.[1] ?? "—"} ▶</button></div>
+		<div class="wxslot" id="wxswap">${swapWeatherHtml()}</div></div>`;
 	document.getElementById("daypage").innerHTML = `
 		<div class="hero"><div class="pic">${pic(d.hero)}</div>
 			<div class="cap"><span class="tag" style="--k:${k.color}">${k.label}</span>
@@ -1056,6 +1072,7 @@ function renderDay() {
 					<button class="btn mapexpand" data-expand="daymap" aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Expand map</button></div>
 					<div class="small mt-8">Numbers match the stops below. Dashed markers are optional.</div></div>
 				${sunPanel(d)}
+				<div class="wxslot" id="wxday">${weatherDayHtml(d)}</div>
 			</div>
 		</div>
 		<h2 class="section-title">Stops</h2>
@@ -1114,6 +1131,150 @@ function sunPanel(d) {
 		<div class="small">${Math.floor(mins / 60)} h ${mins % 60} min of daylight. Wildlife is most active around first and last light, and so are animals on the road.</div>
 	</section>`;
 }
+
+// ---------- Weather ----------
+// Open-Meteo forecasts (one request covers every place) and NWS alerts for today's location. Pages render from the
+// localStorage cache first; refreshes run in the background, and a failed fetch keeps the cached copy.
+const WX_KEY = "ys-weather", WX_MAX_AGE = 30 * 6e4, WX_STALE = 3 * 36e5;
+const WX_CODES = [[0, 0, "Clear"], [1, 1, "Mostly clear"], [2, 2, "Partly cloudy"], [3, 3, "Overcast"], [45, 48, "Fog"], [51, 57, "Drizzle"],
+	[61, 67, "Rain"], [71, 77, "Snow"], [80, 82, "Showers"], [85, 86, "Snow showers"], [95, 99, "Thunderstorm"]];
+const WX_CREDIT = `<a href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>`;
+const wxLabel = c => (WX_CODES.find(([a, b]) => c >= a && c <= b) || [0, 0, "Unknown"])[2];
+const mtIso = t => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Denver", year: "numeric", month: "2-digit", day: "2-digit" }).format(t);
+const deg = v => v == null ? "–" : Math.round(v) + "°";
+const pct = v => v == null ? "–" : Math.round(v) + "%";
+const nwsLink = k => `https://forecast.weather.gov/MapClick.php?lat=${P[k].ll[0]}&lon=${P[k].ll[1]}`;
+let wx = {}, wxBusy = false, wxAttempted = false, wxFailedAt = 0;
+try {
+	wx = JSON.parse(localStorage.getItem(WX_KEY)) || {};
+	if (typeof wx !== "object") wx = {};
+	if (!(wx.forecast && Array.isArray(wx.forecast.days) && wx.forecast.places)) delete wx.forecast;
+	if (!(wx.alerts && Array.isArray(wx.alerts.list))) delete wx.alerts;
+} catch (e) { wx = {}; }
+const saveWx = () => { try { localStorage.setItem(WX_KEY, JSON.stringify(wx)); } catch (e) {} };
+const wxPlaces = () => [...new Set(allDays().flatMap(d => [d.hero, ...d.stops.map(s => s[0])]))];
+function wxDay(key, iso) {
+	const f = wx.forecast, i = f ? f.days.indexOf(iso) : -1, p = f && f.places[key];
+	return i < 0 || !p ? null : { code: p.code[i], hi: p.hi[i], lo: p.lo[i], pop: p.pop[i], snow: p.snow[i], gust: p.gust[i], cloud: p.cloud[i] };
+}
+function wxUpdated(t) {
+	const day = mtIso(t) === mtToday() ? "" : new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", month: "short", day: "numeric" }).format(t) + ", ";
+	return Date.now() - t > WX_STALE ? `<b class="wxstale">Updated ${day}${mtTime(new Date(t))} · may be out of date</b>` : `Updated ${day}${mtTime(new Date(t))}`;
+}
+function weatherDayHtml(d) {
+	try {
+		if (d.iso < mtToday()) return "";
+		const f = wx.forecast;
+		if (!f || !f.days.includes(d.iso)) {
+			const msg = !f && (wxBusy || (!wxAttempted && navigator.onLine)) ? "Getting the forecast…"
+				: `No forecast saved on this device${f ? " for this date" : ""} yet. Try <a href="${nwsLink(d.hero)}" target="_blank" rel="noopener">forecast.weather.gov</a> when you have signal.`;
+			return `<section class="panel wx"><h3>Weather</h3><p class="small">${msg}</p></section>`;
+		}
+		const rows = d.stops.map(([key], i) => {
+			const w = wxDay(key, d.iso);
+			const snow = !w ? "" : w.snow >= 0.05 ? ` · ${w.snow.toFixed(1)} in snow` : w.snow > 0 ? " · trace of snow" : "";
+			return `<li><span class="wxn" style="--k:${KIND[d.kind].color}">${i + 1}</span><div><b>${esc(P[key].label || P[key].name)}</b> <span class="wxsky">${w ? wxLabel(w.code) : "No forecast"}</span>
+				${w ? `<div class="small">${deg(w.hi)} / ${deg(w.lo)} · ${pct(w.pop)} rain${snow}${w.gust >= 25 ? ` · gusts ${Math.round(w.gust)} mph` : ""}</div>` : ""}</div></li>`;
+		}).join("");
+		return `<section class="panel wx"><h3>Weather</h3><div class="small">Forecast for each stop, °F.</div>
+			<ol class="wxlist">${rows}</ol><div class="small">${wxUpdated(f.fetched)} · ${WX_CREDIT}</div></section>`;
+	} catch (e) { return ""; }
+}
+// Cloud cover and rain at the Grand Teton stops for each swappable date, with the clearest date marked.
+function swapWeatherHtml() {
+	try {
+		if (!wx.forecast || mtToday() > SHARED_DATES[SHARED_DATES.length - 1][0]) return "";
+		const rows = SHARED_DATES.map(([iso, label], i) => {
+			const j = wxDay("jenny", iso), o = wxDay("oxbow", iso);
+			return { label, id: order[i], j, o, score: j && o && j.cloud != null && o.cloud != null ? (j.cloud + o.cloud) / 2 + ((j.pop || 0) + (o.pop || 0)) / 20 : null };
+		});
+		const scored = rows.filter(r => r.score !== null);
+		if (!scored.length) return "";
+		const best = scored.reduce((a, b) => b.score < a.score ? b : a), teton = rows.find(r => r.id === "teton");
+		const cell = w => w ? `${pct(w.cloud)} cloud<br>${pct(w.pop)} rain` : "–";
+		return `<b class="section-label">Clouds and rain at the Grand Teton stops</b>
+			<table class="wxtable"><thead><tr><th>Date</th><th>${esc(P.jenny.name)}</th><th>${esc(P.oxbow.name)}</th></tr></thead>
+			<tbody>${rows.map(r => `<tr class="${r === best ? "best" : ""}"><td><span class="wxdate">${r.label}</span><div class="small">${esc(SHARED[r.id].title)}</div></td><td>${cell(r.j)}</td><td>${cell(r.o)}</td></tr>`).join("")}</tbody></table>
+			<p class="small">Clearest: <b>${best.label}</b>${teton === best ? ", already the Grand Teton day." : `. Grand Teton is on ${teton.label} now.`} ${wxUpdated(wx.forecast.fetched)} · ${WX_CREDIT}</p>`;
+	} catch (e) { return ""; }
+}
+function wxNowHtml(d) {
+	try {
+		const f = wx.forecast, n = f && f.places[d.hero] && f.places[d.hero].now;
+		if (!n || n.t == null || mtIso(f.fetched) !== mtToday()) return "";
+		return `<span class="wxnow"><b>${Math.round(n.t)}°F</b> ${esc(wxLabel(n.code).toLowerCase())} near ${esc(P[d.hero].label || P[d.hero].name)}
+			<span class="small">· ${wxUpdated(f.fetched)} · ${WX_CREDIT}</span></span>`;
+	} catch (e) { return ""; }
+}
+function wxAlertsHtml(d) {
+	try {
+		const a = wx.alerts;
+		if (!a || a.date !== mtToday() || a.key !== d.hero) return "";
+		const live = a.list.filter(x => !x.ends || Date.parse(x.ends) > Date.now());
+		return live.length ? `<div class="wxalerts" role="note">${live.map(x => `<div><b>${esc(x.event || "Weather alert")}</b> ${esc(x.headline || "")}</div>`).join("")}
+			<div class="small"><a href="${nwsLink(d.hero)}" target="_blank" rel="noopener">Alerts: National Weather Service</a></div></div>` : "";
+	} catch (e) { return ""; }
+}
+function paintWeather() {
+	try {
+		const d = allDays().find(x => x.id === currentDay), day = document.getElementById("wxday"), sw = document.getElementById("wxswap");
+		if (day && d) day.innerHTML = weatherDayHtml(d);
+		if (sw) sw.innerHTML = swapWeatherHtml();
+		renderNowNext();
+	} catch (e) {}
+}
+async function fetchJSON(url, opts = {}) {
+	const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
+	try {
+		const r = await fetch(url, { ...opts, signal: ctl.signal, cache: "no-store" });
+		if (!r.ok) throw new Error("HTTP " + r.status);
+		return await r.json();
+	} finally { clearTimeout(timer); }
+}
+// Fetch whatever is older than maxAge: the forecast for the rest of the trip, and alerts for where we are today.
+// The half-minute timer passes fromTimer so it backs off for 5 minutes after a failed fetch.
+async function refreshWeather(maxAge = WX_MAX_AGE, fromTimer = false) {
+	if (wxBusy || (fromTimer && Date.now() - wxFailedAt < 5 * 6e4)) return;
+	try {
+		const days = allDays(), today = mtToday(), here = days.find(x => x.iso === today);
+		const start = today > days[0].iso ? today : days[0].iso, end = days[days.length - 1].iso, f = wx.forecast, a = wx.alerts;
+		const needF = start <= end && (!f || Date.now() - f.fetched > maxAge);
+		const needA = !!here && (!a || a.date !== today || a.key !== here.hero || Date.now() - a.fetched > maxAge);
+		if (!needF && !needA) return;
+		wxBusy = wxAttempted = true;
+		if (needF) {
+			try {
+				const keys = wxPlaces(), ll = keys.map(k => P[k].ll);
+				const res = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${ll.map(q => q[0]).join(",")}&longitude=${ll.map(q => q[1]).join(",")}` +
+					"&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,snowfall_sum,wind_gusts_10m_max,cloud_cover_mean" +
+					`&current=temperature_2m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America/Denver&start_date=${start}&end_date=${end}`);
+				const list = Array.isArray(res) ? res : [res];
+				if (list.length !== keys.length || !list.every(x => x && x.daily && Array.isArray(x.daily.time))) throw new Error("Unexpected forecast");
+				const places = {};
+				keys.forEach((k, i) => {
+					const dl = list[i].daily, c = list[i].current || {};
+					places[k] = { code: dl.weather_code, hi: dl.temperature_2m_max, lo: dl.temperature_2m_min, pop: dl.precipitation_probability_max,
+						snow: dl.snowfall_sum, gust: dl.wind_gusts_10m_max, cloud: dl.cloud_cover_mean, now: { t: c.temperature_2m, code: c.weather_code } };
+				});
+				wx.forecast = { fetched: Date.now(), days: list[0].daily.time, places };
+				saveWx();
+			} catch (e) { wxFailedAt = Date.now(); }
+		}
+		if (needA) {
+			try {
+				const [lat, lon] = P[here.hero].ll;
+				const res = await fetchJSON(`https://api.weather.gov/alerts/active?point=${lat},${lon}`, { headers: { Accept: "application/geo+json" } });
+				wx.alerts = { fetched: Date.now(), date: today, key: here.hero,
+					list: (res.features || []).map(x => x.properties || {}).map(q => ({ event: q.event, headline: q.headline, ends: q.ends || q.expires })) };
+				saveWx();
+			} catch (e) { wxFailedAt = Date.now(); }
+		}
+	} catch (e) {}
+	wxBusy = false;
+	paintWeather();
+}
+window.addEventListener("online", () => refreshWeather(5 * 6e4));
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refreshWeather(); });
 
 // ---------- Prep ----------
 const PACKING = [
@@ -1296,7 +1457,7 @@ function renderNowNext() {
 	if (!nn) { el.hidden = true; return; }
 	const nowTxt = nn.now >= 0 ? `<span><b>Now</b> ${esc(d.schedule[nn.now][1])}</span>` : `<span><b>Today</b> ${esc(d.title)}</span>`;
 	const nextTxt = nn.next !== null ? `<span><b>Next · ${esc(d.schedule[nn.next][0])}</b> ${esc(d.schedule[nn.next][1])}</span>` : `<span>That's the last item today.</span>`;
-	el.innerHTML = `${nowTxt}${nextTxt}<button class="linkish" data-open="${d.id}">Open today →</button>`;
+	el.innerHTML = `${nowTxt}${nextTxt}${wxNowHtml(d)}<button class="linkish" data-open="${d.id}">Open today →</button>${wxAlertsHtml(d)}`;
 	el.hidden = false;
 }
 document.getElementById("nownext").addEventListener("click", e => { const o = e.target.closest("[data-open]"); if (o) openDay(o.dataset.open); });
@@ -1932,11 +2093,13 @@ function tick() {
 applySettings();
 function everyHalfMinute() {
 	tick(); renderNowNext(); renderTripBar();
+	if (document.visibilityState === "visible") refreshWeather(WX_MAX_AGE, true);
 	if (document.getElementById("ofout")) document.getElementById("ofout").innerHTML = geyserOut();
 }
 everyHalfMinute(); setInterval(everyHalfMinute, 30000);
 renderMuseum(); renderOverview(); renderDay(); renderPrep();
 if (location.hash) applyHash();
+refreshWeather();
 </script>
 </body>
 </html>
