@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zhang Family Trip · Yellowstone &amp; Grand Teton</title>
-<meta name="description" content="A museum-style guide to the Zhang family's Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
-<meta property="og:title" content="Zhang Family Trip · Yellowstone &amp; Grand Teton">
-<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the Zhang family trip.">
+<title>Yellowstone &amp; Grand Teton Trip Guide</title>
+<meta name="description" content="A museum-style guide to our Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
+<meta property="og:title" content="Yellowstone &amp; Grand Teton Trip Guide">
+<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the trip.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#f5f1e8">
 <meta name="mobile-web-app-capable" content="yes">
@@ -463,7 +463,7 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="wrap">
 	<div class="topline">
-		<div><div class="kicker">The Zhang Family Trip</div><h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1></div>
+		<div><div class="kicker">{{familyTrip}}</div><h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1></div>
 		<button class="btn searchbtn" id="searchbtn" aria-haspopup="dialog" aria-controls="searchpanel"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Search</span><kbd>⌘K</kbd></button>
 	</div>
 	<p class="sub" id="clock"></p>
@@ -499,12 +499,12 @@
 		<div>
 			<div class="panel">
 				<h2 class="ov-title">Ten days, two parks</h2>
-				<p class="lead-p">You'll start at Yellowstone's north gate in Gardiner, spend six nights in Island Park once Elena and Bing arrive, and finish in Bozeman. The big sights (geysers, the canyon and the Tetons) are saved for Thursday through Saturday so everyone can go together.</p>
+				<p class="lead-p">You'll start at Yellowstone's north gate in Gardiner, spend six nights in Island Park once {{guests}} arrive, and finish in Bozeman. The big sights (geysers, the canyon and the Tetons) are saved for Thursday through Saturday so everyone can go together.</p>
 				<div id="family"></div>
 				<div class="stats" id="stats"></div>
 				<div class="phases">
 					<div class="phase" style="--k:var(--north)"><b>Oct 3–4 · Gardiner</b>Mammoth's terraces and Lamar Valley wildlife.</div>
-					<div class="phase" style="--k:var(--optional)"><b>Oct 5–7 · Island Park</b>Airport pickup, then easy outings while Elena and Bing work.</div>
+					<div class="phase" style="--k:var(--optional)"><b>Oct 5–7 · Island Park</b>Airport pickup, then easy outings while {{guests}} work.</div>
 					<div class="phase" style="--k:var(--shared)"><b>Oct 8–10 · Together</b>Old Faithful, the canyon, Grand Teton.</div>
 					<div class="phase" style="--k:var(--travel)"><b>Oct 11–12 · Bozeman</b>Airport drop-off and flights home.</div>
 				</div>
@@ -551,8 +551,68 @@
 </main>
 
 <script>
+// ---------- Personal details ----------
+// The family name, travelers, flight numbers, the Airbnb address and the home city aren't in this file, so it can be
+// hosted publicly. They come from a private link (#trip=<code>), are saved on the device, and fill the {{…}} slots.
+const TRIP_KEY = "ys-guide-trip";
+function readTrip(code) {
+	try {
+		const t = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(code.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0))));
+		const ok = v => typeof v === "string" && v.length > 0 && v.length <= 120 && !/[<>"`\u0000-\u001f]/.test(v);
+		const okList = v => Array.isArray(v) && v.length > 0 && v.length <= 8 && v.every(ok);
+		const fields = Object.entries({ family: ok, travelers: okList, guests: okList, arr: ok, dep: ok, out1: ok, out2: ok, home: ok, addr: ok, addrShort: ok })
+			.filter(([k, valid]) => valid(t?.[k])).map(([k]) => [k, t[k]]);
+		return fields.length ? Object.fromEntries(fields) : null;
+	} catch (e) { return null; }
+}
+let linkCode = location.hash.match(/^#trip=([\w-]+)$/)?.[1];
+let tripDetails = linkCode ? readTrip(linkCode) : null;
+if (tripDetails) {
+	try { localStorage.setItem(TRIP_KEY, linkCode); } catch (e) {}
+	try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+} else {
+	try {
+		linkCode = localStorage.getItem(TRIP_KEY);
+		tripDetails = readTrip(linkCode);
+	} catch (e) {}
+}
+const joinNames = (names, word) => names.length > 1 ? names.slice(0, -1).join(", ") + ` ${word} ` + names[names.length - 1] : names[0];
+// The text for each slot, with a generic fallback. …Amp joins names with "&"; …Sp and …Comma carry their separator.
+function slotText(t) {
+	const fam = t.family, homeRoute = t.out1 && t.out2 && t.home;
+	return {
+		title: fam ? `${fam} Family Trip · Yellowstone & Grand Teton` : "Yellowstone & Grand Teton Trip Guide",
+		familyTrip: fam ? `The ${fam} Family Trip` : "Our Family Trip",
+		family: fam ? `The ${fam} family` : "The travelers",
+		familysTrip: fam ? `the ${fam} family's trip` : "your trip",
+		museum: fam ? `the ${fam} Family Museum` : "the museum",
+		passport: fam ? `${fam} family passport` : "Trip passport",
+		shareTitle: fam ? `${fam} family trip guide` : "Yellowstone trip guide",
+		exportHead: (fam ? `The ${fam} family · ` : "") + "Yellowstone & Grand Teton, Oct 3–12, 2026",
+		notesFile: (fam ? fam.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-family" : "yellowstone") + "-field-notes.txt",
+		travelers: t.travelers || ["You", "Friend 1", "Friend 2"],
+		guests: t.guests ? joinNames(t.guests, "and") : "your friends",
+		guestsAmp: t.guests ? joinNames(t.guests, "&") : "your friends",
+		arr: t.arr || "their flight", arrSp: t.arr ? " " + t.arr : "", arrComma: t.arr ? t.arr + ", " : "",
+		dep: t.dep || "their flight", depSp: t.dep ? " " + t.dep : "", depFull: t.dep ? "Southwest " + t.dep : "their flight",
+		outLine: homeRoute ? `${t.out1} to Chicago, connecting to ${t.out2} to ${t.home}` : "Flight to Chicago, connecting home",
+		outRoute: homeRoute ? `${t.out1} → Chicago → ${t.out2} → ${t.home}` : "home via Chicago",
+		flights: t.dep && t.out1 && t.out2 ? `${t.dep} and ${t.out1}/${t.out2}` : "the Oct 11 and Oct 12 flights",
+		homeStay: t.home ? "Home: " + t.home : "Home",
+		addr: t.addr || "Island Park, ID (the exact address is in your booking)",
+		addrShort: t.addrShort || "Address in your booking"
+	};
+}
+const TRIP = slotText(tripDetails || {});
+// {{guests}} fills in as written; {{Guests}} also capitalizes the first letter.
+const fill = s => s.replace(/\{\{(\w+)\}\}/g, (m, k) => {
+	const v = TRIP[k[0].toLowerCase() + k.slice(1)];
+	if (typeof v !== "string") return m;
+	return k[0] === k[0].toUpperCase() ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+});
+
 // ---------- Travelers: the default names for expenses, sightings and trivia ----------
-const FAMILY = ["Kevin", "Elena", "Bing", "Ken", "Helen"];
+const FAMILY = TRIP.travelers;
 const FAMILY_COLORS = ["#2f6b5e", "#a8573a", "#41708a", "#6a5f86", "#8a6a2f"];
 
 // ---------- Places: lat, lon, name, scene, intro, facts ----------
@@ -595,7 +655,7 @@ const P = {
 		facts: ["Busiest park entrance", "Fill the tank before Thu–Sat"] },
 	islandpark: { ll: [44.42, -111.37], name: "Island Park Airbnb", scene: "cabin", label: "Island Park",
 		intro: "Your base for six nights: forest and meadow country along the Henry's Fork in eastern Idaho, inside the ancient Island Park caldera.",
-		facts: ["4781 Balsom Rd (pin approximate)", "The Henry's Fork is a famous fly-fishing river", "Six nights, Oct 5–11"] },
+		facts: ["{{addrShort}} (pin approximate)", "The Henry's Fork is a famous fly-fishing river", "Six nights, Oct 5–11"] },
 	mesa: { ll: [44.188, -111.329], name: "Upper & Lower Mesa Falls", scene: "falls",
 		intro: "The Henry's Fork drops about 114 feet at Upper Mesa Falls, one of the last big undammed waterfalls in the region. A boardwalk reaches the brink, and Lower Mesa Falls has a roadside overlook.",
 		facts: ["Upper falls ≈114 ft high, ≈200 ft wide", "Lower falls ≈65 ft", "On the Mesa Falls Scenic Byway (ID-47)"] },
@@ -673,15 +733,15 @@ const FIXED = [
 		dyk: ["Early October is the tail end of the elk rut. Listen for bugling around Mammoth.", "Bison can sprint about 35 mph, roughly three times faster than you can run."],
 		tips: ["Pack lunch and drinks, since services are closing for the season.", "Stay at least 25 yards from bison and elk."] },
 	{ id: "oct5", iso: "2026-10-05", date: "Mon Oct 5", kind: "travel", hero: "bigsky", title: "Checkout & airport pickup", route: "Gardiner → Paradise Valley → Bozeman → BZN → Island Park",
-		intro: "An easy day by design: a slow drive back north, a restful afternoon, then the late airport run for Elena and Bing.",
+		intro: "An easy day by design: a slow drive back north, a restful afternoon, then the late airport run for {{guests}}.",
 		leave: "Checkout before 11 a.m.", drive: "BZN → Island Park ≈2½–3 h", stay: "Airbnb, Island Park",
 		path: ["gardiner", "hotsprings", "paradise", "livingston", "bozeman", "bzn", "bigsky", "westy", "islandpark"],
-		schedule: [["Morning", "Optional soak at Yellowstone Hot Springs (check hours)"], ["By 11 a.m.", "Check out of Ridgeline"], ["Midday", "Easy drive north through Paradise Valley"], ["Afternoon", "Rest in Bozeman; dinner and groceries"], ["10:25 p.m.", "Elena & Bing land on Southwest WN2266"], ["≈11 p.m.", "Drive US-191 via Gallatin Canyon and West Yellowstone"], ["≈1:30–2:30 a.m.", "Arrive at the Island Park Airbnb"]],
-		stops: [["hotsprings", "Optional soak, if current hours allow.", true], ["paradise", "Easy drive north."], ["bozeman", "Rest, dinner and groceries."], ["bzn", "Pick up Elena and Bing (WN2266, 10:25 p.m.)."], ["bigsky", "US-191 through Gallatin Canyon."], ["islandpark", "Overnight self-check-in."]],
+		schedule: [["Morning", "Optional soak at Yellowstone Hot Springs (check hours)"], ["By 11 a.m.", "Check out of Ridgeline"], ["Midday", "Easy drive north through Paradise Valley"], ["Afternoon", "Rest in Bozeman; dinner and groceries"], ["10:25 p.m.", "{{GuestsAmp}} land on Southwest{{arrSp}}"], ["≈11 p.m.", "Drive US-191 via Gallatin Canyon and West Yellowstone"], ["≈1:30–2:30 a.m.", "Arrive at the Island Park Airbnb"]],
+		stops: [["hotsprings", "Optional soak, if current hours allow.", true], ["paradise", "Easy drive north."], ["bozeman", "Rest, dinner and groceries."], ["bzn", "Pick up {{guests}} ({{arrComma}}10:25 p.m.)."], ["bigsky", "US-191 through Gallatin Canyon."], ["islandpark", "Overnight self-check-in."]],
 		dyk: ["Tonight's drive crosses from Montana into Idaho at Targhee Pass, right on the Continental Divide. Both states are on Mountain Time here, so there's no clock change."],
-		tips: ["Reconfirm WN2266 before heading to the airport.", "Use a rested driver and confirm overnight access with the host.", "Checking into Island Park before the pickup would add a lot of backtracking."] },
+		tips: ["Reconfirm {{arr}} before heading to the airport.", "Use a rested driver and confirm overnight access with the host.", "Checking into Island Park before the pickup would add a lot of backtracking."] },
 	{ id: "oct6", iso: "2026-10-06", date: "Tue Oct 6", kind: "optional", hero: "mesa", title: "Recovery & Mesa Falls", route: "Island Park → Upper & Lower Mesa Falls → Island Park",
-		intro: "Elena and Bing work today. Sleep in after the late arrival; anyone free can take a short trip to the waterfalls.",
+		intro: "{{Guests}} work today. Sleep in after the late arrival; anyone free can take a short trip to the waterfalls.",
 		leave: "Sleep in; falls ≈ noon", drive: "Short local drive", stay: "Airbnb, Island Park",
 		path: ["islandpark", "mesa", "islandpark"],
 		schedule: [["Morning", "Sleep in after the late arrival"], ["≈Noon", "Optional: Upper Mesa Falls and the Lower Mesa Falls viewpoint"], ["Afternoon", "Groceries; rest at the Airbnb"], ["Evening", "Early dinner"]],
@@ -689,7 +749,7 @@ const FIXED = [
 		dyk: ["Island Park sits inside an old caldera, an earlier chapter of the same volcanic hotspot that now powers Yellowstone."],
 		tips: ["Confirm reliable Wi-Fi with the host for the workdays."] },
 	{ id: "oct7", iso: "2026-10-07", date: "Wed Oct 7", kind: "optional", hero: "norris", title: "Optional Norris or local day", route: "Island Park → West Entrance → Madison → Norris → Gibbon Falls → return",
-		intro: "Another workday for Elena and Bing. Those who are free can preview the thermal country at Norris, or keep it local.",
+		intro: "Another workday for {{guests}}. Those who are free can preview the thermal country at Norris, or keep it local.",
 		leave: "Flexible", drive: "Optional", stay: "Airbnb, Island Park",
 		path: ["islandpark", "westy", "madison", "gibbon", "norris", "gibbon", "madison", "westy", "islandpark"],
 		schedule: [["Flexible", "Optional drive in via the West Entrance"], ["Midday", "Porcelain Basin loop at Norris"], ["Return", "Gibbon Falls pullout"], ["Evening", "Fuel up, pack lunches, check the forecast for Thu–Sat"]],
@@ -728,19 +788,19 @@ const SHARED_DATES = [["2026-10-08", "Thu Oct 8"], ["2026-10-09", "Fri Oct 9"], 
 
 const TAIL = [
 	{ id: "oct11", iso: "2026-10-11", date: "Sun Oct 11", kind: "travel", hero: "bozeman", title: "Bozeman & airport drop-off", route: "Island Park → West Yellowstone → Gallatin Canyon → Bozeman → BZN",
-		intro: "Pack up the cabin and head back to Bozeman for lunch before seeing Elena and Bing off.",
+		intro: "Pack up the cabin and head back to Bozeman for lunch before seeing {{guests}} off.",
 		leave: "≈9:30–10 a.m.", drive: "≈3–3½ h incl. buffer", stay: "Hyatt Place Bozeman",
 		path: ["islandpark", "westy", "bigsky", "bozeman", "bzn"],
-		schedule: [["≈9:30–10 a.m.", "Check out (or earlier if the host requires)"], ["≈1 p.m.", "Lunch and a brief downtown walk in Bozeman"], ["By 4:15 p.m.", "Drop Elena & Bing at BZN"], ["6:15 p.m.", "Southwest WN1188 departs"], ["After drop-off", "Check in at Hyatt Place (from 3 p.m.)"]],
-		stops: [["bozeman", "Lunch and a brief downtown walk, if time allows."], ["bzn", "Drop Elena and Bing by 4:15 p.m. for WN1188 at 6:15 p.m."]],
+		schedule: [["≈9:30–10 a.m.", "Check out (or earlier if the host requires)"], ["≈1 p.m.", "Lunch and a brief downtown walk in Bozeman"], ["By 4:15 p.m.", "Drop {{guestsAmp}} at BZN"], ["6:15 p.m.", "{{DepFull}} departs"], ["After drop-off", "Check in at Hyatt Place (from 3 p.m.)"]],
+		stops: [["bozeman", "Lunch and a brief downtown walk, if time allows."], ["bzn", "Drop {{guests}} by 4:15 p.m. for {{dep}} at 6:15 p.m."]],
 		dyk: ["Bozeman is named for John Bozeman, who blazed a trail here to the Montana gold fields in the 1860s."],
 		tips: ["Confirm the Airbnb checkout time with the host."] },
 	{ id: "oct12", iso: "2026-10-12", date: "Mon Oct 12", kind: "travel", hero: "bzn", title: "Departure", route: "Hyatt Place → fuel stop → Avis return at BZN",
 		intro: "Fuel up, return the car and fly home.",
-		leave: "≈10 a.m.", drive: "Terminal by 11:15 a.m.", stay: "Home: Pittsburgh",
+		leave: "≈10 a.m.", drive: "Terminal by 11:15 a.m.", stay: "{{homeStay}}",
 		path: ["bzn"],
-		schedule: [["≈10 a.m.", "Leave Hyatt Place (checkout by 11)"], ["≈10:30 a.m.", "Refuel and return the Avis car"], ["By 11:15 a.m.", "At the terminal"], ["1:15 p.m.", "AA1501 to Chicago, connecting to AA1173 to Pittsburgh"]],
-		stops: [["bzn", "Refuel, return the Avis car, fly AA1501 → Chicago → AA1173 → Pittsburgh."]],
+		schedule: [["≈10 a.m.", "Leave Hyatt Place (checkout by 11)"], ["≈10:30 a.m.", "Refuel and return the Avis car"], ["By 11:15 a.m.", "At the terminal"], ["1:15 p.m.", "{{OutLine}}"]],
+		stops: [["bzn", "Refuel, return the Avis car, fly {{outRoute}}."]],
 		dyk: ["Yellowstone covers about 2.2 million acres, more than Rhode Island and Delaware combined."],
 		tips: [] }
 ];
@@ -748,22 +808,34 @@ const TAIL = [
 const BOOKINGS = [
 	["Oct 3", "Arrive BZN 5:13 p.m. Avis rental through Oct 12."],
 	["Oct 3–5", "Ridgeline Hotel at Yellowstone, Gardiner. Check-in from 4 p.m.; checkout before 11 a.m. Mon."],
-	["Oct 5", "Elena & Bing arrive BZN 10:25 p.m., Southwest WN2266."],
-	["Oct 5–11", "Airbnb, 4781 Balsom Road, Island Park, ID 83429. Six nights."],
-	["Oct 11", "Elena & Bing depart BZN 6:15 p.m., Southwest WN1188. Drop-off by 4:15 p.m."],
+	["Oct 5", "{{GuestsAmp}} arrive BZN 10:25 p.m., Southwest{{arrSp}}."],
+	["Oct 5–11", "Airbnb, {{addr}}. Six nights."],
+	["Oct 11", "{{GuestsAmp}} depart BZN 6:15 p.m., Southwest{{depSp}}. Drop-off by 4:15 p.m."],
 	["Oct 11–12", "Hyatt Place Bozeman Yellowstone Airport. 2 adults, 1 room. In 3 p.m. / out 11 a.m."],
-	["Oct 12", "Depart BZN 1:15 p.m., AA1501 → Chicago → AA1173 → Pittsburgh."]
+	["Oct 12", "Depart BZN 1:15 p.m., {{outRoute}}."]
 ];
 const CHECKS = [
 	["airbnb", "Airbnb: confirm map pin, overnight self-check-in and checkout time", "Before Oct 5"],
 	["wifi", "Airbnb: confirm reliable Wi-Fi for the workdays", "Before Oct 6"],
-	["wn2266", "Reconfirm WN2266 before pickup", "Mon Oct 5"],
+	["arrival", "Reconfirm {{arr}} before pickup", "Mon Oct 5"],
 	["springs", "Check Yellowstone Hot Springs hours", "Mon Oct 5"],
 	["fuel", "Pack lunches and fill the tank for Thu–Sat", "Wed Oct 7"],
 	["teton", "Pick the clearest of Oct 8–10 for Grand Teton", "Wed Oct 7"],
 	["roads", "Check both parks' roads (Craig Pass, South Entrance) each morning", "Daily"],
-	["flights", "Reconfirm WN1188 and AA1501/AA1173", "Oct 10"]
+	["flights", "Reconfirm {{flights}}", "Oct 10"]
 ];
+
+// Fill the {{…}} slots in the trip data and the page text (see Personal details).
+function fillAll(o) {
+	for (const k in o) {
+		if (typeof o[k] === "string") o[k] = fill(o[k]);
+		else if (o[k] && typeof o[k] === "object") fillAll(o[k]);
+	}
+}
+[P, FIXED, SHARED, TAIL, BOOKINGS, CHECKS].forEach(fillAll);
+const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+for (let n; (n = walker.nextNode());) if (n.parentNode.nodeName !== "SCRIPT" && n.nodeValue.includes("{{")) n.nodeValue = fill(n.nodeValue);
+document.title = TRIP.title;
 
 // ---------- State ----------
 let store = {};
@@ -976,7 +1048,7 @@ function renderOverview() {
 	const places = new Set(days.flatMap(d => d.stops.map(s => s[0])));
 	document.getElementById("stats").innerHTML =
 		[[days.length, "days"], [2, "national parks"], [places.size, "places"], [3, "home bases"]].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
-	document.getElementById("family").innerHTML = `<b class="section-label">The Zhang family</b>
+	document.getElementById("family").innerHTML = `<b class="section-label">${esc(TRIP.family)}</b>
 		<ul class="members" aria-label="Travelers">${people().map((p, i) => `<li><span class="avatar" style="--c:${FAMILY_COLORS[i % FAMILY_COLORS.length]}" aria-hidden="true">${esc([...p][0].toUpperCase())}</span>${esc(p)}</li>`).join("")}</ul>`;
 	const today = mtToday();
 	document.getElementById("cards").innerHTML = days.map((d, i) => `
@@ -997,7 +1069,7 @@ function renderDay() {
 	document.getElementById("daybar").innerHTML = days.map(x =>
 		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date}${x.iso === today ? " •" : ""}</button>`).join("");
 	const swap = d.slot === undefined ? "" : `<div class="panel mt-16"><h3>Swap this day</h3>
-		<div class="small">Swap only within Thu–Sat so Elena and Bing can join. Put Grand Teton on the clearest day.</div>
+		<div class="small">Swap only within Thu–Sat so ${esc(TRIP.guests)} can join. Put Grand Teton on the clearest day.</div>
 		<div class="daynav start mt-8">
 			<button class="btn" data-move="-1" ${d.slot === 0 ? "disabled" : ""}>◀ Move to ${SHARED_DATES[d.slot - 1]?.[1] ?? "—"}</button>
 			<button class="btn" data-move="1" ${d.slot === 2 ? "disabled" : ""}>Move to ${SHARED_DATES[d.slot + 1]?.[1] ?? "—"} ▶</button></div></div>`;
@@ -1165,7 +1237,7 @@ function renderLog() {
 }
 function exportText() {
 	const seen = store.wild || {}, notes = store.notes || {}, by = store.spottedBy || {};
-	let t = "The Zhang family · Yellowstone & Grand Teton, Oct 3–12, 2026\n\nWILDLIFE SPOTTED\n";
+	let t = TRIP.exportHead + "\n\nWILDLIFE SPOTTED\n";
 	for (const [id, name] of WILDLIFE) if (seen[id]) t += `- ${name} (${seen[id]}${by[id] ? ", " + by[id] : ""})\n`;
 	t += "\nFIELD NOTES\n";
 	for (const d of allDays()) if ((notes[d.id] || "").trim()) t += `\n${d.date}: ${d.title}\n${notes[d.id].trim()}\n`;
@@ -1197,9 +1269,9 @@ document.getElementById("fieldlog").addEventListener("click", async e => {
 		try {
 			const a = document.createElement("a");
 			a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-			a.download = "zhang-family-field-notes.txt";
+			a.download = TRIP.notesFile;
 			document.body.appendChild(a); a.click(); a.remove();
-			status.textContent = "Downloaded zhang-family-field-notes.txt.";
+			status.textContent = `Downloaded ${TRIP.notesFile}.`;
 		} catch (err) {
 			status.textContent = "This viewer blocks downloads.";
 		}
@@ -1340,10 +1412,9 @@ document.addEventListener("keydown", e => {
 document.addEventListener("click", e => { if (!e.target.closest?.("#searchpanel, #searchbtn")) closeSearch(); });
 
 // ---------- Share ----------
-async function shareCurrent(title) {
-	const url = location.href, status = document.getElementById("sharestatus");
+async function shareCurrent(title, url = location.href, status = document.getElementById("sharestatus")) {
 	try {
-		if (navigator.share) { await navigator.share({ title: title + " · Zhang family trip guide", url }); return; }
+		if (navigator.share) { await navigator.share({ title: title + " · " + TRIP.shareTitle, url }); return; }
 		await navigator.clipboard.writeText(url);
 		if (status) status.textContent = "Link copied.";
 	} catch (e) {
@@ -1525,6 +1596,12 @@ function settingsHtml() {
 		</div>
 		<div class="mt-16"><b>Offline use</b>
 			<p class="small" id="offlinestatus" role="status">${esc(offlineStatus)}</p></div>
+		<div class="mt-16"><b>Trip details</b>
+			${tripDetails ? `<p class="small">The family name, travelers, flight numbers and the Airbnb address came from your private link and are saved only on this device.</p>
+				<div class="row"><button class="btn" data-trip="share">Share private link</button><button class="btn" data-trip="remove">Remove from this device</button></div>`
+			: `<p class="small">The family name, travelers, flight numbers and the Airbnb address aren't stored in the guide. Open your private link, or paste it here.</p>
+				<div class="row"><input id="triplink" class="field" aria-label="Private link" placeholder="Paste your private link"><button class="btn" data-trip="add">Add</button></div>`}
+			<p class="small" id="tripstatus" role="status"></p></div>
 		<div class="mt-16"><b>Saved progress</b>
 			<p class="small">Stamps, favorites, notes, sightings, packing, expenses and quiz scores are stored only on this device.</p>
 			${resetArmed ? `<div class="row"><button class="btn danger" data-reset="confirm">Yes, clear everything</button><button class="btn" data-reset="cancel">Keep my data</button></div>`
@@ -1582,6 +1659,18 @@ toolsEl.addEventListener("click", e => {
 		const names = document.getElementById("expeople").value.split(",").map(s => s.trim()).filter(Boolean);
 		if (names.length) { store.people = [...new Set(names)]; save(); document.getElementById("expenses").innerHTML = expensesHtml(); }
 		return;
+	}
+	const tr = e.target.closest("[data-trip]");
+	if (tr) {
+		const status = document.getElementById("tripstatus"), action = tr.dataset.trip;
+		if (action === "share") return shareCurrent("Private link", location.href.split("#")[0] + "#trip=" + linkCode, status);
+		const code = action === "add" ? document.getElementById("triplink").value.match(/#trip=([\w-]+)/)?.[1] : "";
+		if (action === "add" && !readTrip(code)) { status.textContent = "That doesn't look like a private link. It should contain #trip=."; return; }
+		try {
+			if (action === "add") localStorage.setItem(TRIP_KEY, code);
+			else localStorage.removeItem(TRIP_KEY);
+		} catch (e) { status.textContent = "Couldn't save on this device."; return; }
+		return location.reload();
 	}
 	const r = e.target.closest("[data-reset]");
 	if (r) {
@@ -1714,10 +1803,10 @@ function renderMuseum() {
 		el.innerHTML = `<div class="lobby"><div>
 			<section class="panel lobby-intro">
 				<div class="lobby-art" aria-hidden="true">${scene("tetons")}</div>
-				<div class="kicker">Welcome to the Zhang Family Museum</div>
+				<div class="kicker">Welcome to ${esc(TRIP.museum)}</div>
 				<h2>${EX_ORDER.length} exhibits in ${ROOMS.length} galleries</h2>
-				<p class="lead-p">Every place on the Zhang family's trip is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
-				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>Zhang family passport</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
+				<p class="lead-p">Every place on ${esc(TRIP.familysTrip)} is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
+				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>${esc(TRIP.passport)}</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
 				<input class="search" id="exsearch" type="search" placeholder="Search exhibits, e.g. bison, waterfall, 308 ft" value="${esc(museumQuery)}" aria-label="Search exhibits">
 				<div class="daynav start mt-8"><button class="btn ${favOnly ? "stamped" : ""}" data-favfilter="1" aria-pressed="${favOnly}" ${nFav || favOnly ? "" : "disabled"}>♥ Favorites only (${nFav})</button></div>
 			</section>
