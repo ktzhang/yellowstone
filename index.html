@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zhang Family Trip · Yellowstone &amp; Grand Teton</title>
-<meta name="description" content="A museum-style guide to the Zhang family's Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
-<meta property="og:title" content="Zhang Family Trip · Yellowstone &amp; Grand Teton">
-<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the Zhang family trip.">
+<title>Yellowstone &amp; Grand Teton Trip Guide</title>
+<meta name="description" content="A museum-style guide to our Oct 3–12, 2026 trip through Yellowstone and Grand Teton: day-by-day plans, maps and facts about every stop.">
+<meta property="og:title" content="Yellowstone &amp; Grand Teton Trip Guide">
+<meta property="og:description" content="Day-by-day plans, maps and exhibits for every stop on the trip.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#f5f1e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Trip Guide">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6b5e'/%3E%3Cpath d='M14 26 Q15 14 16 5 Q17 14 18 26Z' fill='%23fffdf8'/%3E%3Cellipse cx='16' cy='26' rx='9' ry='2.5' fill='%23e4dccd'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,6 +115,12 @@
 	.stop .plan { background: var(--bg); border-radius: 8px; padding: 6px 10px; margin: 8px 0; font-size: 14px; }
 	.stop .intro { font-size: 14px; margin: 0; }
 	.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+	.guide { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+	.guide .section-label { margin-top: 0; }
+	.guide .story { font-size: 14px; line-height: 1.55; margin: 4px 0 0; }
+	.morefacts { margin: 6px 0 8px; padding-left: 18px; font-size: 13.5px; color: var(--muted); }
+	.morefacts li { margin: 3px 0; }
+	.exstory { line-height: 1.6; max-width: 60ch; margin: 4px 0 0; }
 	.chip { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
 	.daynav { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 	.sticky { position: sticky; top: 12px; }
@@ -494,7 +504,7 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="wrap">
 	<div class="topline">
-		<div><div class="kicker">The Zhang Family Trip</div><h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1></div>
+		<div><div class="kicker">{{familyTrip}}</div><h1>Yellowstone &amp; Grand Teton · Oct 3–12, 2026</h1></div>
 		<button class="btn searchbtn" id="searchbtn" aria-haspopup="dialog" aria-controls="searchpanel"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Search</span><kbd>⌘K</kbd></button>
 	</div>
 	<p class="sub" id="clock"></p>
@@ -533,12 +543,12 @@
 		<div>
 			<div class="panel">
 				<h2 class="ov-title">Ten days, two parks</h2>
-				<p class="lead-p">You'll start at Yellowstone's north gate in Gardiner, spend six nights in Island Park once Elena and Bing arrive, and finish in Bozeman. The big sights (geysers, the canyon and the Tetons) are saved for Thursday through Saturday so everyone can go together.</p>
+				<p class="lead-p">You'll start at Yellowstone's north gate in Gardiner, spend six nights in Island Park once {{guests}} arrive, and finish in Bozeman. The big sights (geysers, the canyon and the Tetons) are saved for Thursday through Saturday so everyone can go together.</p>
 				<div id="family"></div>
 				<div class="stats" id="stats"></div>
 				<div class="phases">
 					<div class="phase" style="--k:var(--north)"><b>Oct 3–4 · Gardiner</b>Mammoth's terraces and Lamar Valley wildlife.</div>
-					<div class="phase" style="--k:var(--optional)"><b>Oct 5–7 · Island Park</b>Airport pickup, then easy outings while Elena and Bing work.</div>
+					<div class="phase" style="--k:var(--optional)"><b>Oct 5–7 · Island Park</b>Airport pickup, then easy outings while {{guests}} work.</div>
 					<div class="phase" style="--k:var(--shared)"><b>Oct 8–10 · Together</b>Old Faithful, the canyon, Grand Teton.</div>
 					<div class="phase" style="--k:var(--travel)"><b>Oct 11–12 · Bozeman</b>Airport drop-off and flights home.</div>
 				</div>
@@ -589,8 +599,68 @@
 </dialog>
 
 <script>
+// ---------- Personal details ----------
+// The family name, travelers, flight numbers, the Airbnb address and the home city aren't in this file, so it can be
+// hosted publicly. They come from a private link (#trip=<code>), are saved on the device, and fill the {{…}} slots.
+const TRIP_KEY = "ys-guide-trip";
+function readTrip(code) {
+	try {
+		const t = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(code.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0))));
+		const ok = v => typeof v === "string" && v.length > 0 && v.length <= 120 && !/[<>"`\u0000-\u001f]/.test(v);
+		const okList = v => Array.isArray(v) && v.length > 0 && v.length <= 8 && v.every(ok);
+		const fields = Object.entries({ family: ok, travelers: okList, guests: okList, arr: ok, dep: ok, out1: ok, out2: ok, home: ok, addr: ok, addrShort: ok })
+			.filter(([k, valid]) => valid(t?.[k])).map(([k]) => [k, t[k]]);
+		return fields.length ? Object.fromEntries(fields) : null;
+	} catch (e) { return null; }
+}
+let linkCode = location.hash.match(/^#trip=([\w-]+)$/)?.[1];
+let tripDetails = linkCode ? readTrip(linkCode) : null;
+if (tripDetails) {
+	try { localStorage.setItem(TRIP_KEY, linkCode); } catch (e) {}
+	try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+} else {
+	try {
+		linkCode = localStorage.getItem(TRIP_KEY);
+		tripDetails = readTrip(linkCode);
+	} catch (e) {}
+}
+const joinNames = (names, word) => names.length > 1 ? names.slice(0, -1).join(", ") + ` ${word} ` + names[names.length - 1] : names[0];
+// The text for each slot, with a generic fallback. …Amp joins names with "&"; …Sp and …Comma carry their separator.
+function slotText(t) {
+	const fam = t.family, homeRoute = t.out1 && t.out2 && t.home;
+	return {
+		title: fam ? `${fam} Family Trip · Yellowstone & Grand Teton` : "Yellowstone & Grand Teton Trip Guide",
+		familyTrip: fam ? `The ${fam} Family Trip` : "Our Family Trip",
+		family: fam ? `The ${fam} family` : "The travelers",
+		familysTrip: fam ? `the ${fam} family's trip` : "your trip",
+		museum: fam ? `the ${fam} Family Museum` : "the museum",
+		passport: fam ? `${fam} family passport` : "Trip passport",
+		shareTitle: fam ? `${fam} family trip guide` : "Yellowstone trip guide",
+		exportHead: (fam ? `The ${fam} family · ` : "") + "Yellowstone & Grand Teton, Oct 3–12, 2026",
+		notesFile: (fam ? fam.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-family" : "yellowstone") + "-field-notes.txt",
+		travelers: t.travelers || ["You", "Friend 1", "Friend 2"],
+		guests: t.guests ? joinNames(t.guests, "and") : "your friends",
+		guestsAmp: t.guests ? joinNames(t.guests, "&") : "your friends",
+		arr: t.arr || "their flight", arrSp: t.arr ? " " + t.arr : "", arrComma: t.arr ? t.arr + ", " : "",
+		dep: t.dep || "their flight", depSp: t.dep ? " " + t.dep : "", depFull: t.dep ? "Southwest " + t.dep : "their flight",
+		outLine: homeRoute ? `${t.out1} to Chicago, connecting to ${t.out2} to ${t.home}` : "Flight to Chicago, connecting home",
+		outRoute: homeRoute ? `${t.out1} → Chicago → ${t.out2} → ${t.home}` : "home via Chicago",
+		flights: t.dep && t.out1 && t.out2 ? `${t.dep} and ${t.out1}/${t.out2}` : "the Oct 11 and Oct 12 flights",
+		homeStay: t.home ? "Home: " + t.home : "Home",
+		addr: t.addr || "Island Park, ID (the exact address is in your booking)",
+		addrShort: t.addrShort || "Address in your booking"
+	};
+}
+const TRIP = slotText(tripDetails || {});
+// {{guests}} fills in as written; {{Guests}} also capitalizes the first letter.
+const fill = s => s.replace(/\{\{(\w+)\}\}/g, (m, k) => {
+	const v = TRIP[k[0].toLowerCase() + k.slice(1)];
+	if (typeof v !== "string") return m;
+	return k[0] === k[0].toUpperCase() ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+});
+
 // ---------- Travelers: the default names for expenses, sightings and trivia ----------
-const FAMILY = ["Kevin", "Elena", "Bing", "Ken", "Helen"];
+const FAMILY = TRIP.travelers;
 const FAMILY_COLORS = ["#2f6b5e", "#a8573a", "#41708a", "#6a5f86", "#8a6a2f"];
 
 // ---------- Places: lat, lon, name, scene, intro, facts ----------
@@ -633,7 +703,7 @@ const P = {
 		facts: ["Busiest park entrance", "Fill the tank before Thu–Sat"] },
 	islandpark: { ll: [44.42, -111.37], name: "Island Park Airbnb", scene: "cabin", label: "Island Park",
 		intro: "Your base for six nights: forest and meadow country along the Henry's Fork in eastern Idaho, inside the ancient Island Park caldera.",
-		facts: ["4781 Balsom Rd (pin approximate)", "The Henry's Fork is a famous fly-fishing river", "Six nights, Oct 5–11"] },
+		facts: ["{{addrShort}} (pin approximate)", "The Henry's Fork is a famous fly-fishing river", "Six nights, Oct 5–11"] },
 	mesa: { ll: [44.188, -111.329], name: "Upper & Lower Mesa Falls", scene: "falls",
 		intro: "The Henry's Fork drops about 114 feet at Upper Mesa Falls, one of the last big undammed waterfalls in the region. A boardwalk reaches the brink, and Lower Mesa Falls has a roadside overlook.",
 		facts: ["Upper falls ≈114 ft high, ≈200 ft wide", "Lower falls ≈65 ft", "On the Mesa Falls Scenic Byway (ID-47)"] },
@@ -711,15 +781,15 @@ const FIXED = [
 		dyk: ["Early October is the tail end of the elk rut. Listen for bugling around Mammoth.", "Bison can sprint about 35 mph, roughly three times faster than you can run."],
 		tips: ["Pack lunch and drinks, since services are closing for the season.", "Stay at least 25 yards from bison and elk."] },
 	{ id: "oct5", iso: "2026-10-05", date: "Mon Oct 5", kind: "travel", hero: "bigsky", title: "Checkout & airport pickup", route: "Gardiner → Paradise Valley → Bozeman → BZN → Island Park",
-		intro: "An easy day by design: a slow drive back north, a restful afternoon, then the late airport run for Elena and Bing.",
+		intro: "An easy day by design: a slow drive back north, a restful afternoon, then the late airport run for {{guests}}.",
 		leave: "Checkout before 11 a.m.", drive: "BZN → Island Park ≈2½–3 h", stay: "Airbnb, Island Park",
 		path: ["gardiner", "hotsprings", "paradise", "livingston", "bozeman", "bzn", "bigsky", "westy", "islandpark"],
-		schedule: [["Morning", "Optional soak at Yellowstone Hot Springs (check hours)"], ["By 11 a.m.", "Check out of Ridgeline"], ["Midday", "Easy drive north through Paradise Valley"], ["Afternoon", "Rest in Bozeman; dinner and groceries"], ["10:25 p.m.", "Elena & Bing land on Southwest WN2266"], ["≈11 p.m.", "Drive US-191 via Gallatin Canyon and West Yellowstone"], ["≈1:30–2:30 a.m.", "Arrive at the Island Park Airbnb"]],
-		stops: [["hotsprings", "Optional soak, if current hours allow.", true], ["paradise", "Easy drive north."], ["bozeman", "Rest, dinner and groceries."], ["bzn", "Pick up Elena and Bing (WN2266, 10:25 p.m.)."], ["bigsky", "US-191 through Gallatin Canyon."], ["islandpark", "Overnight self-check-in."]],
+		schedule: [["Morning", "Optional soak at Yellowstone Hot Springs (check hours)"], ["By 11 a.m.", "Check out of Ridgeline"], ["Midday", "Easy drive north through Paradise Valley"], ["Afternoon", "Rest in Bozeman; dinner and groceries"], ["10:25 p.m.", "{{GuestsAmp}} land on Southwest{{arrSp}}"], ["≈11 p.m.", "Drive US-191 via Gallatin Canyon and West Yellowstone"], ["≈1:30–2:30 a.m.", "Arrive at the Island Park Airbnb"]],
+		stops: [["hotsprings", "Optional soak, if current hours allow.", true], ["paradise", "Easy drive north."], ["bozeman", "Rest, dinner and groceries."], ["bzn", "Pick up {{guests}} ({{arrComma}}10:25 p.m.)."], ["bigsky", "US-191 through Gallatin Canyon."], ["islandpark", "Overnight self-check-in."]],
 		dyk: ["Tonight's drive crosses from Montana into Idaho at Targhee Pass, right on the Continental Divide. Both states are on Mountain Time here, so there's no clock change."],
-		tips: ["Reconfirm WN2266 before heading to the airport.", "Use a rested driver and confirm overnight access with the host.", "Checking into Island Park before the pickup would add a lot of backtracking."] },
+		tips: ["Reconfirm {{arr}} before heading to the airport.", "Use a rested driver and confirm overnight access with the host.", "Checking into Island Park before the pickup would add a lot of backtracking."] },
 	{ id: "oct6", iso: "2026-10-06", date: "Tue Oct 6", kind: "optional", hero: "mesa", title: "Recovery & Mesa Falls", route: "Island Park → Upper & Lower Mesa Falls → Island Park",
-		intro: "Elena and Bing work today. Sleep in after the late arrival; anyone free can take a short trip to the waterfalls.",
+		intro: "{{Guests}} work today. Sleep in after the late arrival; anyone free can take a short trip to the waterfalls.",
 		leave: "Sleep in; falls ≈ noon", drive: "Short local drive", stay: "Airbnb, Island Park",
 		path: ["islandpark", "mesa", "islandpark"],
 		schedule: [["Morning", "Sleep in after the late arrival"], ["≈Noon", "Optional: Upper Mesa Falls and the Lower Mesa Falls viewpoint"], ["Afternoon", "Groceries; rest at the Airbnb"], ["Evening", "Early dinner"]],
@@ -727,7 +797,7 @@ const FIXED = [
 		dyk: ["Island Park sits inside an old caldera, an earlier chapter of the same volcanic hotspot that now powers Yellowstone."],
 		tips: ["Confirm reliable Wi-Fi with the host for the workdays."] },
 	{ id: "oct7", iso: "2026-10-07", date: "Wed Oct 7", kind: "optional", hero: "norris", title: "Optional Norris or local day", route: "Island Park → West Entrance → Madison → Norris → Gibbon Falls → return",
-		intro: "Another workday for Elena and Bing. Those who are free can preview the thermal country at Norris, or keep it local.",
+		intro: "Another workday for {{guests}}. Those who are free can preview the thermal country at Norris, or keep it local.",
 		leave: "Flexible", drive: "Optional", stay: "Airbnb, Island Park",
 		path: ["islandpark", "westy", "madison", "gibbon", "norris", "gibbon", "madison", "westy", "islandpark"],
 		schedule: [["Flexible", "Optional drive in via the West Entrance"], ["Midday", "Porcelain Basin loop at Norris"], ["Return", "Gibbon Falls pullout"], ["Evening", "Fuel up, pack lunches, check the forecast for Thu–Sat"]],
@@ -766,19 +836,19 @@ const SHARED_DATES = [["2026-10-08", "Thu Oct 8"], ["2026-10-09", "Fri Oct 9"], 
 
 const TAIL = [
 	{ id: "oct11", iso: "2026-10-11", date: "Sun Oct 11", kind: "travel", hero: "bozeman", title: "Bozeman & airport drop-off", route: "Island Park → West Yellowstone → Gallatin Canyon → Bozeman → BZN",
-		intro: "Pack up the cabin and head back to Bozeman for lunch before seeing Elena and Bing off.",
+		intro: "Pack up the cabin and head back to Bozeman for lunch before seeing {{guests}} off.",
 		leave: "≈9:30–10 a.m.", drive: "≈3–3½ h incl. buffer", stay: "Hyatt Place Bozeman",
 		path: ["islandpark", "westy", "bigsky", "bozeman", "bzn"],
-		schedule: [["≈9:30–10 a.m.", "Check out (or earlier if the host requires)"], ["≈1 p.m.", "Lunch and a brief downtown walk in Bozeman"], ["By 4:15 p.m.", "Drop Elena & Bing at BZN"], ["6:15 p.m.", "Southwest WN1188 departs"], ["After drop-off", "Check in at Hyatt Place (from 3 p.m.)"]],
-		stops: [["bozeman", "Lunch and a brief downtown walk, if time allows."], ["bzn", "Drop Elena and Bing by 4:15 p.m. for WN1188 at 6:15 p.m."]],
+		schedule: [["≈9:30–10 a.m.", "Check out (or earlier if the host requires)"], ["≈1 p.m.", "Lunch and a brief downtown walk in Bozeman"], ["By 4:15 p.m.", "Drop {{guestsAmp}} at BZN"], ["6:15 p.m.", "{{DepFull}} departs"], ["After drop-off", "Check in at Hyatt Place (from 3 p.m.)"]],
+		stops: [["bozeman", "Lunch and a brief downtown walk, if time allows."], ["bzn", "Drop {{guests}} by 4:15 p.m. for {{dep}} at 6:15 p.m."]],
 		dyk: ["Bozeman is named for John Bozeman, who blazed a trail here to the Montana gold fields in the 1860s."],
 		tips: ["Confirm the Airbnb checkout time with the host."] },
 	{ id: "oct12", iso: "2026-10-12", date: "Mon Oct 12", kind: "travel", hero: "bzn", title: "Departure", route: "Hyatt Place → fuel stop → Avis return at BZN",
 		intro: "Fuel up, return the car and fly home.",
-		leave: "≈10 a.m.", drive: "Terminal by 11:15 a.m.", stay: "Home: Pittsburgh",
+		leave: "≈10 a.m.", drive: "Terminal by 11:15 a.m.", stay: "{{homeStay}}",
 		path: ["bzn"],
-		schedule: [["≈10 a.m.", "Leave Hyatt Place (checkout by 11)"], ["≈10:30 a.m.", "Refuel and return the Avis car"], ["By 11:15 a.m.", "At the terminal"], ["1:15 p.m.", "AA1501 to Chicago, connecting to AA1173 to Pittsburgh"]],
-		stops: [["bzn", "Refuel, return the Avis car, fly AA1501 → Chicago → AA1173 → Pittsburgh."]],
+		schedule: [["≈10 a.m.", "Leave Hyatt Place (checkout by 11)"], ["≈10:30 a.m.", "Refuel and return the Avis car"], ["By 11:15 a.m.", "At the terminal"], ["1:15 p.m.", "{{OutLine}}"]],
+		stops: [["bzn", "Refuel, return the Avis car, fly {{outRoute}}."]],
 		dyk: ["Yellowstone covers about 2.2 million acres, more than Rhode Island and Delaware combined."],
 		tips: [] }
 ];
@@ -786,22 +856,34 @@ const TAIL = [
 const BOOKINGS = [
 	["Oct 3", "Arrive BZN 5:13 p.m. Avis rental through Oct 12."],
 	["Oct 3–5", "Ridgeline Hotel at Yellowstone, Gardiner. Check-in from 4 p.m.; checkout before 11 a.m. Mon."],
-	["Oct 5", "Elena & Bing arrive BZN 10:25 p.m., Southwest WN2266."],
-	["Oct 5–11", "Airbnb, 4781 Balsom Road, Island Park, ID 83429. Six nights."],
-	["Oct 11", "Elena & Bing depart BZN 6:15 p.m., Southwest WN1188. Drop-off by 4:15 p.m."],
+	["Oct 5", "{{GuestsAmp}} arrive BZN 10:25 p.m., Southwest{{arrSp}}."],
+	["Oct 5–11", "Airbnb, {{addr}}. Six nights."],
+	["Oct 11", "{{GuestsAmp}} depart BZN 6:15 p.m., Southwest{{depSp}}. Drop-off by 4:15 p.m."],
 	["Oct 11–12", "Hyatt Place Bozeman Yellowstone Airport. 2 adults, 1 room. In 3 p.m. / out 11 a.m."],
-	["Oct 12", "Depart BZN 1:15 p.m., AA1501 → Chicago → AA1173 → Pittsburgh."]
+	["Oct 12", "Depart BZN 1:15 p.m., {{outRoute}}."]
 ];
 const CHECKS = [
 	["airbnb", "Airbnb: confirm map pin, overnight self-check-in and checkout time", "Before Oct 5"],
 	["wifi", "Airbnb: confirm reliable Wi-Fi for the workdays", "Before Oct 6"],
-	["wn2266", "Reconfirm WN2266 before pickup", "Mon Oct 5"],
+	["arrival", "Reconfirm {{arr}} before pickup", "Mon Oct 5"],
 	["springs", "Check Yellowstone Hot Springs hours", "Mon Oct 5"],
 	["fuel", "Pack lunches and fill the tank for Thu–Sat", "Wed Oct 7"],
 	["teton", "Pick the clearest of Oct 8–10 for Grand Teton", "Wed Oct 7"],
 	["roads", "Check both parks' roads (Craig Pass, South Entrance) each morning", "Daily"],
-	["flights", "Reconfirm WN1188 and AA1501/AA1173", "Oct 10"]
+	["flights", "Reconfirm {{flights}}", "Oct 10"]
 ];
+
+// Fill the {{…}} slots in the trip data and the page text (see Personal details).
+function fillAll(o) {
+	for (const k in o) {
+		if (typeof o[k] === "string") o[k] = fill(o[k]);
+		else if (o[k] && typeof o[k] === "object") fillAll(o[k]);
+	}
+}
+[P, FIXED, SHARED, TAIL, BOOKINGS, CHECKS].forEach(fillAll);
+const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+for (let n; (n = walker.nextNode());) if (n.parentNode.nodeName !== "SCRIPT" && n.nodeValue.includes("{{")) n.nodeValue = fill(n.nodeValue);
+document.title = TRIP.title;
 
 // ---------- State ----------
 let store = {};
@@ -1014,7 +1096,7 @@ function renderOverview() {
 	const places = new Set(days.flatMap(d => d.stops.map(s => s[0])));
 	document.getElementById("stats").innerHTML =
 		[[days.length, "days"], [2, "national parks"], [places.size, "places"], [3, "home bases"]].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
-	document.getElementById("family").innerHTML = `<b class="section-label">The Zhang family</b>
+	document.getElementById("family").innerHTML = `<b class="section-label">${esc(TRIP.family)}</b>
 		<ul class="members" aria-label="Travelers">${people().map((p, i) => `<li><span class="avatar" style="--c:${FAMILY_COLORS[i % FAMILY_COLORS.length]}" aria-hidden="true">${esc([...p][0].toUpperCase())}</span>${esc(p)}</li>`).join("")}</ul>`;
 	const today = mtToday();
 	document.getElementById("cards").innerHTML = days.map((d, i) => `
@@ -1035,7 +1117,7 @@ function renderDay() {
 	document.getElementById("daybar").innerHTML = days.map(x =>
 		`<button style="--k:${KIND[x.kind].color}" data-open="${x.id}" aria-current="${x.id === currentDay}">${x.date}${x.iso === today ? " •" : ""}</button>`).join("");
 	const swap = d.slot === undefined ? "" : `<div class="panel mt-16"><h3>Swap this day</h3>
-		<div class="small">Swap only within Thu–Sat so Elena and Bing can join. Put Grand Teton on the clearest day.</div>
+		<div class="small">Swap only within Thu–Sat so ${esc(TRIP.guests)} can join. Put Grand Teton on the clearest day.</div>
 		<div class="daynav start mt-8">
 			<button class="btn" data-move="-1" ${d.slot === 0 ? "disabled" : ""}>◀ Move to ${SHARED_DATES[d.slot - 1]?.[1] ?? "—"}</button>
 			<button class="btn" data-move="1" ${d.slot === 2 ? "disabled" : ""}>Move to ${SHARED_DATES[d.slot + 1]?.[1] ?? "—"} ▶</button></div>
@@ -1087,6 +1169,10 @@ function renderDay() {
 					<div class="plan"><b>Plan:</b> ${esc(plan)}</div>
 					<p class="intro">${esc(P[key].intro)}</p>
 					<div class="chips">${P[key].facts.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div>
+					${GUIDE[key] ? `<div class="guide"><span class="section-label">Tour guide</span>
+						<p class="story">${esc(GUIDE[key].story)}</p>
+						<ul class="morefacts">${GUIDE[key].facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+						${"speechSynthesis" in window ? `<button class="linkish" data-guide="${key}">▶ Listen</button>` : ""}</div>` : ""}
 					<button class="btn" data-exhibit="${key}">View exhibit ${exNo(key)} →</button>
 				</div>
 			</article>`).join("")}</div>
@@ -1350,7 +1436,7 @@ function renderLog() {
 }
 function exportText() {
 	const seen = store.wild || {}, notes = store.notes || {}, by = store.spottedBy || {};
-	let t = "The Zhang family · Yellowstone & Grand Teton, Oct 3–12, 2026\n\nWILDLIFE SPOTTED\n";
+	let t = TRIP.exportHead + "\n\nWILDLIFE SPOTTED\n";
 	for (const [id, name] of WILDLIFE) if (seen[id]) t += `- ${name} (${seen[id]}${by[id] ? ", " + by[id] : ""})\n`;
 	t += "\nFIELD NOTES\n";
 	for (const d of allDays()) if ((notes[d.id] || "").trim()) t += `\n${d.date}: ${d.title}\n${notes[d.id].trim()}\n`;
@@ -1382,9 +1468,9 @@ document.getElementById("fieldlog").addEventListener("click", async e => {
 		try {
 			const a = document.createElement("a");
 			a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-			a.download = "zhang-family-field-notes.txt";
+			a.download = TRIP.notesFile;
 			document.body.appendChild(a); a.click(); a.remove();
-			status.textContent = "Downloaded zhang-family-field-notes.txt.";
+			status.textContent = `Downloaded ${TRIP.notesFile}.`;
 		} catch (err) {
 			status.textContent = "This viewer blocks downloads.";
 		}
@@ -1476,7 +1562,7 @@ function renderTripBar() {
 function searchIndex() {
 	const items = [];
 	for (const d of allDays()) items.push({ kind: "Day", title: `${d.date}: ${d.title}`, text: [d.route, d.intro, ...d.schedule.map(s => s[1]), ...d.tips, ...d.dyk].join(" "), go: () => openDay(d.id) });
-	for (const k of EX_ORDER) items.push({ kind: `Exhibit ${exNo(k)}`, title: P[k].name, text: [P[k].intro, ...P[k].facts, ...(LOOK[k] || [])].join(" "), go: () => openExhibit(k) });
+	for (const k of EX_ORDER) items.push({ kind: `Exhibit ${exNo(k)}`, title: P[k].name, text: [P[k].intro, GUIDE[k]?.story || "", ...allFacts(k), ...(LOOK[k] || [])].join(" "), go: () => openExhibit(k) });
 	for (const [id, name, where] of WILDLIFE) items.push({ kind: "Wildlife", title: name, text: where, go: () => showView("log") });
 	for (const [cat, list] of PACKING) for (const [, text] of list) items.push({ kind: "Packing · " + cat, title: text, text: "", go: () => showView("prep") });
 	return items;
@@ -1526,10 +1612,9 @@ document.addEventListener("keydown", e => {
 document.addEventListener("click", e => { if (!e.target.closest?.("#searchpanel, #searchbtn")) closeSearch(); });
 
 // ---------- Share ----------
-async function shareCurrent(title) {
-	const url = location.href, status = document.getElementById("sharestatus");
+async function shareCurrent(title, url = location.href, status = document.getElementById("sharestatus")) {
 	try {
-		if (navigator.share) { await navigator.share({ title: title + " · Zhang family trip guide", url }); return; }
+		if (navigator.share) { await navigator.share({ title: title + " · " + TRIP.shareTitle, url }); return; }
 		await navigator.clipboard.writeText(url);
 		if (status) status.textContent = "Link copied.";
 	} catch (e) {
@@ -1662,6 +1747,35 @@ function expensesHtml(err = {}) {
 		</details>`;
 }
 
+// ---------- Offline ----------
+// sw.js saves the guide, its photos and fonts on the first visit so it keeps working without signal. That needs
+// the guide to be served from a website; opened as a file or inside Slack it still works, but isn't saved.
+let swState = "off", offlineStatus = "Checking whether the guide is saved for offline use…";
+async function updateOffline() {
+	if (swState === "on") {
+		try {
+			const page = await caches.match("./");
+			const saved = (await Promise.all([...PHOTOS].map(k => caches.match(`img/${k}.jpg`)))).filter(Boolean).length;
+			offlineStatus = !page ? "Saving the guide for offline use. Keep it open while you have signal."
+				: saved < PHOTOS.size ? `Saved for offline use, with ${saved} of ${PHOTOS.size} photos so far. Keep it open while you have signal.`
+				: `Saved on this device with all ${PHOTOS.size} photos, so the guide works without signal.`;
+		} catch (e) { swState = "off"; }
+	}
+	if (swState === "off") offlineStatus = "Offline saving isn't available in this viewer. Open the guide's website in your phone's browser to save it.";
+	const el = document.getElementById("offlinestatus");
+	if (el) el.textContent = offlineStatus;
+}
+try {
+	if (/^https?:$/.test(location.protocol) && "serviceWorker" in navigator) {
+		swState = "pending";
+		navigator.serviceWorker.addEventListener("message", updateOffline);
+		navigator.serviceWorker.register("sw.js").then(() => {
+			document.head.append(Object.assign(document.createElement("link"), { rel: "manifest", href: "manifest.webmanifest" }));
+			swState = "on";
+		}, () => { swState = "off"; }).then(updateOffline);
+	}
+} catch (e) { swState = "off"; }
+
 // ---------- Tools: settings ----------
 function applySettings() {
 	const pref = store.theme || "auto";
@@ -1680,6 +1794,14 @@ function settingsHtml() {
 			<div><label for="setsize">Text size</label><select id="setsize" class="field">
 				${[["1", "Default"], ["1.12", "Large"], ["1.25", "Larger"]].map(([v, l]) => `<option value="${v}" ${z === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
 		</div>
+		<div class="mt-16"><b>Offline use</b>
+			<p class="small" id="offlinestatus" role="status">${esc(offlineStatus)}</p></div>
+		<div class="mt-16"><b>Trip details</b>
+			${tripDetails ? `<p class="small">The family name, travelers, flight numbers and the Airbnb address came from your private link and are saved only on this device.</p>
+				<div class="row"><button class="btn" data-trip="share">Share private link</button><button class="btn" data-trip="remove">Remove from this device</button></div>`
+			: `<p class="small">The family name, travelers, flight numbers and the Airbnb address aren't stored in the guide. Open your private link, or paste it here.</p>
+				<div class="row"><input id="triplink" class="field" aria-label="Private link" placeholder="Paste your private link"><button class="btn" data-trip="add">Add</button></div>`}
+			<p class="small" id="tripstatus" role="status"></p></div>
 		<div class="mt-16"><b>Saved progress</b>
 			<p class="small">Stamps, favorites, notes, sightings, packing, expenses and quiz scores are stored only on this device.</p>
 			${resetArmed ? `<div class="row"><button class="btn danger" data-reset="confirm">Yes, clear everything</button><button class="btn" data-reset="cancel">Keep my data</button></div>`
@@ -1731,6 +1853,7 @@ function creditsHtml() {
 
 // ---------- Tools view ----------
 function renderTools() {
+	updateOffline();
 	document.getElementById("tools").innerHTML = `
 		<div class="toolgrid">
 			<section class="panel"><div class="kicker">Upper Geyser Basin</div><h3>Old Faithful countdown</h3><div id="geyser">${geyserHtml()}</div></section>
@@ -1780,6 +1903,18 @@ toolsEl.addEventListener("click", e => {
 		const names = document.getElementById("expeople").value.split(",").map(s => s.trim()).filter(Boolean);
 		if (names.length) { store.people = [...new Set(names)]; save(); document.getElementById("expenses").innerHTML = expensesHtml(); }
 		return;
+	}
+	const tr = e.target.closest("[data-trip]");
+	if (tr) {
+		const status = document.getElementById("tripstatus"), action = tr.dataset.trip;
+		if (action === "share") return shareCurrent("Private link", location.href.split("#")[0] + "#trip=" + linkCode, status);
+		const code = action === "add" ? document.getElementById("triplink").value.match(/#trip=([\w-]+)/)?.[1] : "";
+		if (action === "add" && !readTrip(code)) { status.textContent = "That doesn't look like a private link. It should contain #trip=."; return; }
+		try {
+			if (action === "add") localStorage.setItem(TRIP_KEY, code);
+			else localStorage.removeItem(TRIP_KEY);
+		} catch (e) { status.textContent = "Couldn't save on this device."; return; }
+		return location.reload();
 	}
 	const r = e.target.closest("[data-reset]");
 	if (r) {
@@ -1868,6 +2003,39 @@ const LOOK = {
 	gardiner: ["Elk wandering through town", "The Yellowstone River rushing below the bridge"],
 	paradise: ["The Absaroka peaks to the east", "Fly fishers on the Yellowstone River"]
 };
+// ---------- Tour guide: the background story and more facts for each place ----------
+const GUIDE = {
+	bzn: { story: "The airport sits beside Belgrade, about 8 miles northwest of downtown Bozeman, in the Gallatin Valley. Long before runways, this fertile basin in Crow territory was known as the \"Valley of the Flowers.\" Farmers and ranchers settled it in the 1860s, and Bozeman grew up as its market town. The airport added \"Yellowstone\" to its name in 2011 to tie itself to the park, about an hour and a half's drive away.", facts: ["Opened in 1941 as Gallatin Field", "International flights since a customs facility opened in 2012", "Main runway is 8,994 ft long"] },
+	bozeman: { story: "Bozeman is named for John Bozeman, who opened the Bozeman Trail to the Virginia City gold fields in 1863 and helped plat the town in August 1864. He was killed in 1867 near the Yellowstone River, and whether Blackfeet or his companion Tom Cover was responsible remains uncertain. Farming built the early town; by the 1920s its canneries were major pea producers, and the area became known as the \"Sweet Pea Capital of the Nation.\" Many of Main Street's brick storefronts date from the late 1800s and early 1900s.", facts: ["Montana State University was founded in 1893 as the state's land-grant college", "Museum of the Rockies was founded in 1957, a gift of physician Caroline McGill", "Montana's 4th-largest city: 53,293 residents in 2020"] },
+	livingston: { story: "Livingston took shape in 1882 as the Northern Pacific built west; the rails arrived that November, and the town incorporated on December 21. Here crews serviced steam engines before the climb over Bozeman Pass. The name honors railroad director Johnston Livingston, though his nephew Crawford, who opened the First National Bank here in 1883, is more often called the namesake. William Clark camped on the town's outskirts in July 1806 before heading down the Yellowstone. Calamity Jane is among its famous past residents.", facts: ["The depot last saw passenger trains in 1979, on Amtrak's North Coast Hiawatha", "The restored depot has been the Livingston Depot Center since 1987", "Dan Bailey's Fly Shop opened on Park Street in 1938"] },
+	paradise: { story: "When Yellowstone became a park in 1872, this valley was the main route in, and early expeditions followed the river south as you do now. In 1866 Nelson Story drove some 1,000 Longhorn cattle up the Bozeman Trail and into the valley, one of the earliest significant herds in Montana. Near Emigrant, watch the eastern skyline for Emigrant Peak, a landmark from US-89. The valley ends at Yankee Jim Canyon, about 15 miles north of Gardiner. In early October the cottonwoods along the river are often turning gold.", facts: ["Emigrant Peak, on the valley's east side, rises to ≈10,900 ft", "Mount Cowen, 11,212 ft, is the highest peak near the valley", "The Absaroka Range stretches ≈150 miles, into Wyoming"] },
+	hotsprings: { story: "Corwin Springs is a small community on the Yellowstone River between Yankee Jim Canyon and Gardiner. Hot springs like these form when rain and snowmelt seep deep underground, warm up, and rise back through cracks in the rock. Trains on the Northern Pacific's Yellowstone branch once ran along this stretch of river, first to Cinnabar station and later to Gardiner. On a cold October morning, steam often hangs over the warm water while the Gallatin Range rises to the west.", facts: ["Corwin Springs had 101 residents in the 2020 census", "Electric Peak (10,969 ft) is the Gallatin Range's highest summit", "Chico Hot Springs, up the valley, began turning into a resort in 1900"] },
+	gardiner: { story: "People have hunted where the Gardner and Yellowstone rivers meet for at least 11,000 years. The town's name comes from Johnson Gardner, a fur trapper who trapped here in 1830–31; accounts from the 1870s spelled it \"Gardiner,\" and the town kept that spelling while the river stayed the Gardner. Early Gardiner was a rough squatter camp of saloons serving miners and soldiers. Trains brought tourists to town from the early 1900s until 1948. In June 2022, record floods washed out the road up the Gardner River canyon, cutting the town off from the park.", facts: ["Founded 1880", "Population 833 at the 2020 census", "Yellowstone's Heritage and Research Center opened here in 2005"] },
+	arch: { story: "Before 1903, trains stopped at Cinnabar, a few miles northwest, and visitors rode the rest of the way by horse-drawn coach. When the Northern Pacific extended its line to Gardiner, Army engineer Hiram Chittenden pushed for a grand gateway, feeling the dry flats here made a weak first impression. Crews built the arch from locally quarried columnar basalt between February and August 1903. Roosevelt, touring the park that spring, set the cornerstone on April 24 over a time capsule holding a Bible, his photograph and local newspapers.", facts: ["Stands ≈50 feet tall", "Cost ≈$10,000 to build in 1903", "A side panel reads “Created by Act of Congress, March 1, 1872”"] },
+	mammoth: { story: "Mammoth lies outside the Yellowstone caldera, yet the same underground magma system heats its water. That water is thought to flow north from Norris along a fault through limestone, dissolving rock as it goes, and more than two tons of calcium carbonate in solution reach Mammoth each day. Fort Yellowstone itself stands on an old terrace. When building began, some worried the hollow ground would not hold the weight, and fenced sinkholes still mark the Parade Ground. In the village, Capitol Hill and Dude Hill are thermal kames, gravel mounds left by melting ice-age glaciers.", facts: ["Terrace Mountain is the largest known carbonate-depositing spring in the world", "Construction of Fort Yellowstone began in 1891", "Hot water surfaces here at ≈170°F (80°C)"] },
+	tower: { story: "The name comes from the rock spires that crown Tower Fall, about three miles south of the junction. Samuel Hauser of the 1870 Washburn party named the falls on August 27 of that year, writing in his diary that they were the most beautiful he had ever seen. A year earlier, the Cook–Folsom–Peterson party had spent a full day here. Roosevelt Lodge, built in 1919–1920, was planned to feel like a dude ranch for travelers arriving by car, close to where Presidents Chester A. Arthur and Theodore Roosevelt reputedly camped.", facts: ["Tower Fall drops 132 feet", "The USGS changed the name from Tower Falls to Tower Fall in 1928", "The Roosevelt Lodge Historic District includes 143 buildings"] },
+	lamar: { story: "Trapper Osborne Russell rode into this valley in July 1834 and found a small Shoshone band living here, the only people in what he called a lonely and secluded spot. The river was then the East Fork of the Yellowstone; geologist Arnold Hague renamed it during the 1884–85 survey for L.Q.C. Lamar, then Secretary of the Interior. In 1907 the park moved 28 bison from Fort Yellowstone to the new Lamar Buffalo Ranch and raised a herd later released to mix with the wild one. Its 1915 ranger station and 1927 barn still stand.", facts: ["The Lamar River runs ≈40 miles, entirely inside the park", "Hay grown at the ranch fed wild bison in winter until the 1950s", "Rose Creek, Crystal Creek and Soda Butte were 1995 wolf release sites"] },
+	bigsky: { story: "Meriwether Lewis named this river in July 1805 for Albert Gallatin, Thomas Jefferson's Treasury Secretary. The Gallatin starts in Yellowstone's northwest corner and drops into this rocky canyon on its way north toward Bozeman. The Big Sky turnoff leads west to the ski resort that retired NBC anchorman Chet Huntley, a Montana native, opened in 1973. In early October, you may see aspens and cottonwoods along the banks turning gold.", facts: ["The Gallatin runs ≈120 miles before joining the Jefferson and Madison to form the Missouri", "Lone Mountain, home of Big Sky Resort, tops out at ≈11,166 ft", "In June snowmelt, a canyon stretch called the “Mad Mile” runs as Class IV whitewater"] },
+	westy: { story: "West Yellowstone began in June 1908, when Union Pacific's Oregon Short Line Railroad finished laying track to the park's western edge. Rail travelers set out into Yellowstone from here, and a small town grew up to serve them. It tried several names before settling on West Yellowstone in 1920. Train service ended in 1960, but the town stayed and incorporated in 1966. October mornings here tend to be frosty, and the ground is usually under snow by early November.", facts: ["Sits at ≈6,660 ft above sea level", "Hit −66°F, the lowest ever recorded in a lower-48 town", "Population 1,272 at the 2020 census"] },
+	islandpark: { story: "About 2.1 million years ago, a super-eruption here blasted out roughly 600 cubic miles of rock and ash and left the Island Park Caldera, one of the largest on Earth. Its ash reached as far as the Mississippi River near St. Louis. A smaller caldera formed inside it 1.3 million years ago, and that rim is the one you can still see. The Henry's Fork, named for fur trader Andrew Henry, winds across the caldera floor. In 1947, business owners along US-20 incorporated a 33-mile-long town, mainly so they could legally sell liquor.", facts: ["The Island Park Caldera measures ≈50 by 40 miles", "Its eruption made ≈2,500 times the ash of Mount St. Helens in 1980", "The town of Island Park is only ≈500 ft wide in most places"] },
+	mesa: { story: "The Henry's Fork flows south from the Island Park country to reach these falls. They share their name with the Mesa Falls Tuff, a layer of volcanic rock laid down when the Henry's Fork Caldera erupted 1.3 million years ago, and the river has been wearing down through that old landscape ever since. Beside the upper falls stands a log inn more than a century old, now inside Caribou-Targhee National Forest. In October, the spray feels cold, and shaded boardwalks can stay frosty into the morning.", facts: ["The log Big Falls Inn beside Upper Mesa Falls was built in 1907", "The Henry's Fork Caldera eruption produced more than ≈67 cubic miles of material"] },
+	madison: { story: "On September 19, 1870, the Washburn party camped here after exploring the Upper Geyser Basin, where they had named Old Faithful. A popular legend says that around the campfire that night, the men agreed this country should be set aside for everyone rather than claimed for private profit, with Montana lawyer Cornelius Hedges voicing the idea. The story is more legend than record, but Congress did create the park two years later, in 1872. In early October, listen for elk bugling in the meadows.", facts: ["The Madison runs ≈183 miles to Three Forks, Montana, where it helps form the Missouri", "Meriwether Lewis named the river in July 1805 for Secretary of State James Madison", "A landslide from the 1959 Hebgen Lake earthquake dammed the Madison downstream, forming Quake Lake"] },
+	gibbon: { story: "Photographer William Henry Jackson described these falls in 1872, during the second Hayden survey, and nobody recorded who named them. The river honors John Gibbon, an Army officer who came through that year; early maps called it Gibbons Fork. In the 1880s, tourists scrambled down a steep trail for the view. The falls kept all fish out of the upper river until trout were stocked above them. In fall, spawning brown trout push up from the Madison, and this is as far as they can go.", facts: ["The Gibbon River runs ≈25 mi before meeting the Firehole at Madison Junction", "Rainbow trout first stocked above the falls in 1890", "≈4.7 mi upstream of Madison Junction"] },
+	norris: { story: "Norris runs hot because three fault zones meet here: the Norris-Mammoth Corridor, the Hebgen Lake fault, and the ring of fractures around the Yellowstone Caldera. Unlike most of the park's basins, its water is acidic, so different microbes grow and paint different colors. Sometimes the whole basin goes through a disturbance lasting a few weeks, when water levels, temperatures and eruptions shift. In 1989, Porkchop Geyser in Back Basin clogged with silica and exploded, throwing rocks more than 200 feet. Between rare major eruptions, Steamboat keeps busy with splashes of about 40 feet.", facts: ["Echinus Geyser's water: pH ≈3.5", "Longest recorded gap between Steamboat major eruptions: 50 years", "193 geysers recorded here in a 2011 study"] },
+	midway: { story: "In 1839, four fur trappers crossed this basin and described a boiling lake about 300 feet across, most likely this spring. Geologists with the 1871 Hayden survey named it for colors that match a prism's rainbow. The mats change with the seasons, running orange and red in summer and darker green in winter. The center is so deep and sterile that you see the natural blue of water itself. Next door, Excelsior Geyser threw water 100 to 300 feet high in 1881, and its own violent eruptions likely wrecked its plumbing.", facts: ["Third-largest hot spring in the world", "Excelsior pours 4,000–4,500 gallons of ≈199°F water a minute into the river", "Excelsior erupted for 46 hours on Sept. 14–16, 1985, up to ≈80 ft"] },
+	oldfaithful: { story: "On September 18, 1870, the Washburn expedition entered this basin, and the first geyser they saw was this one. They named it Old Faithful, the first geyser in the park to get a name. Early visitors sometimes used it as a laundry: cotton and linen came out clean, while wool came out in shreds. Robert Reamer was 29 when he designed the Inn, and crews kept building through the winter of 1903–04. Today guests watch eruptions from the Inn's second-floor deck.", facts: ["Inn lobby rises 92 ft to the crown of the gable", "Inn fireplace: ≈500 tons of stone, 85 ft tall", "Water 72 ft down Old Faithful's vent measured 244°F"] },
+	craig: { story: "Hiram Chittenden came upon Isa Lake in 1891 while scouting the best route between Old Faithful and West Thumb. He named the pass for Ida Craig, a friend's daughter said to be the first tourist across, and the lake for Isabel Jelke of Cincinnati, though it is not clear why. The drainage runs backward from what you might expect: the east side feeds the Lewis River toward the Pacific, and the west side feeds the Firehole toward the Gulf of Mexico.", facts: ["Pass is ≈8 mi east of Old Faithful on the Grand Loop Road", "Road over the pass finished in September 1891", "Great yellow pond-lilies grow in Isa Lake"] },
+	canyon: { story: "The canyon started as an old geyser basin, where heat and hot water cooked the rhyolite lava until it turned soft and crumbly. At the end of the last ice age, ice dams at the outlet of Yellowstone Lake gave way, and floods tore through the weakened rock. Iron in the walls is still oxidizing; in effect, the canyon is rusting. Charles Cook looked in from across today's Inspiration Point in 1869 and wrote that it seemed five minutes before anyone spoke. By October the river runs low and the falls look slimmer.", facts: ["Lower Falls is nearly twice as tall as Niagara Falls", "Lower Falls flow: ≈680 cu ft/s in autumn vs ≈8,400 at the late-spring peak", "Upper Falls sits ≈¼ mi upstream of the Lower Falls"] },
+	artist: { story: "The name comes from a mistake. In 1883, photographer Frank Jay Haynes believed Thomas Moran had sketched the falls from this spot, but later work showed Moran's sketches were made on the North Rim. The name stuck anyway. Moran came through in 1871 with Ferdinand Hayden's survey, whose report, with his sketches and William Henry Jackson's photographs, helped persuade Congress to protect the area. Moran's large 1872 oil painting is idealized, so compare its ochers and browns, and the four tiny figures he added, with the real view.", facts: ["Moran's 1872 canvas hung in the U.S. Capitol; moved to Interior Dept. custody in 1950", "Moran signed his work “TYM,” for Thomas “Yellowstone” Moran", "Moran painted a second version of this canyon scene in 1893–1901"] },
+	hayden: { story: "The valley honors Ferdinand Hayden, whose 1871 survey helped lead to the park's creation, though no one knows for sure who first applied the name; it appears on maps in 1880. Long before roads, trappers, explorers and Native people followed the river through here as the natural route to the lake. The meadows along the water sit on old lake sediments from a time when Yellowstone Lake was much larger. By October the summer rut is over, bison herds are breaking into smaller groups, and mature bulls often wander alone.", facts: ["Bison bulls weigh up to 2,000 lb; cows up to 1,000 lb", "By 1902, poaching had cut Yellowstone's bison herd to about two dozen animals", "The valley covers ≈50 sq mi, roughly 7 mi across each way"] },
+	mud: { story: "Mud Volcano sits on what geologists call a perched water system: there is little water here, so instead of geysers you get steam vents and mudpots. Acidic vapors break the rock down into clay, and with no water to wash it away, the clay stays as thick, sticky mud. Features at this south end of Hayden Valley were among the first that early explorers described. In 1978 a series of shallow earthquakes heated the ground, and a once grassy, wooded slope became a tangle of fallen trees known as the cooking hillside.", facts: ["1978 earthquakes pushed soil temperatures here to nearly 200°F", "Microbes turn hydrogen sulfide gas into the sulfuric acid that makes the mud", "Neighbors include Sulphur Caldron, Mud Geyser and Black Dragon's Caldron"] },
+	westthumb: { story: "West Thumb Bay is itself a caldera, about the size of Oregon's Crater Lake, that filled with water and became part of Yellowstone Lake. Its heat source is thought to lie only about 10,000 feet down, and some hot springs sit on the lake floor, where they melt holes in the winter ice. In 1870, Walter Trumbull of the Washburn party wrote of a trout that slipped off a hook into Fishing Cone and boiled. Early visitors arrived by stagecoach from Old Faithful and could board the steamship Zillah here for Lake Hotel.", facts: ["Fishing Cone erupted as high as 40 ft in 1919", "Abyss Pool, beside the boardwalk, is ≈53 ft deep", "84 geysers have erupted here, per a 2011 park-wide count"] },
+	south: { story: "Just below Lewis Lake, the Lewis River spills over Lewis Falls in plain view of the road, then heads south through its canyon. Past the South Entrance you cross into the John D. Rockefeller Jr. Memorial Parkway, land moved from national forest to the Park Service so the two parks would meet without a break. It honors the philanthropist who helped create and enlarge Grand Teton. Fire swept its northern stretch in 1988, and the forest has been growing back since. Old lava beds lie to the north, Teton granite to the south.", facts: ["Lewis Falls drops ≈30 feet, about halfway between the South Entrance and Grant Village", "Congress created the John D. Rockefeller Jr. Memorial Parkway in 1972", "The parkway protects ≈24,000 acres linking Yellowstone and Grand Teton"] },
+	jackson: { story: "Ice-age glaciers flowing south off the Yellowstone Plateau gouged this basin, and a natural lake filled it. A log crib dam held the outlet by 1907; the main dam followed in 1911, was enlarged in 1916 and rebuilt by 1989. The dam stores water for Idaho farmers under water rights older than the park, so the waterline rises and falls with the irrigation season. The lake and valley share the name of fur trapper Davey Jackson, whose partner William Sublette called this valley Jackson's Hole.", facts: ["Jackson Lake is up to 438 feet deep", "The lake stretches up to 15 miles long and 7 miles wide", "Elk Island is the largest of the lake's 15-plus islands"] },
+	oxbow: { story: "The dark mass behind the bend is Mount Moran. Its flanks are gneiss, darker than the pale granite of the central peaks, and a stripe of diabase on its east face formed when molten rock squeezed into cracks about 765 million years ago. Its summit still wears a cap of Flathead sandstone, a layer worn away from the other high peaks. Here the Snake spreads into some of the park's largest wetlands, Pacific Creek and Buffalo Fork join it near Moran, and in early October the aspens along the bank often turn gold.", facts: ["Mount Moran rises ≈6,000 ft above Jackson Lake", "Mount Moran was first climbed in 1922", "Skillet Glacier shows plainly on Moran's east face"] },
+	jenny: { story: "The name dates to 1872, when English-born trapper Richard \"Beaver Dick\" Leigh guided the Hayden survey through the Tetons, and the survey named nearby Leigh Lake for him and this one for his wife. In 1876 Jenny and their children died of smallpox. The glacier that carved Cascade Canyon pushed rock debris into a terminal moraine, and that ridge holds the lake in today. The canyon runs west between Teewinot and Mount Owen on the south and Symmetry Spire on the north. In the late 1950s, climber John Gill started bouldering near the lake.", facts: ["Hidden Falls, just west of the lake, drops ≈100 feet", "The Jenny Lake Trail loops 7.1 miles around the lake", "Lake Solitude, at the head of Cascade Canyon's North Fork, sits at 9,035 ft"] }
+};
+const allFacts = k => [...P[k].facts, ...(GUIDE[k]?.facts || [])];
 const EX_ORDER = ROOMS.flatMap(r => r.items);
 const roomOf = k => ROOMS.find(r => r.items.includes(k));
 const exNo = k => String(EX_ORDER.indexOf(k) + 1).padStart(2, "0");
@@ -1908,15 +2076,15 @@ function renderMuseum() {
 	if (!museumAt) {
 		const q = museumQuery.trim().toLowerCase();
 		const favs = store.favs || {}, nFav = EX_ORDER.filter(k => favs[k]).length;
-		const match = k => (!favOnly || favs[k]) && (!q || [P[k].name, P[k].intro, ...P[k].facts, ...(LOOK[k] || [])].join(" ").toLowerCase().includes(q));
+		const match = k => (!favOnly || favs[k]) && (!q || [P[k].name, P[k].intro, GUIDE[k]?.story || "", ...allFacts(k), ...(LOOK[k] || [])].join(" ").toLowerCase().includes(q));
 		let ci = 0;
 		el.innerHTML = `<div class="lobby"><div>
 			<section class="panel lobby-intro">
 				<div class="lobby-art" aria-hidden="true">${scene("tetons")}</div>
-				<div class="kicker">Welcome to the Zhang Family Museum</div>
+				<div class="kicker">Welcome to ${esc(TRIP.museum)}</div>
 				<h2>${EX_ORDER.length} exhibits in ${ROOMS.length} galleries</h2>
-				<p class="lead-p">Every place on the Zhang family's trip is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
-				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>Zhang family passport</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
+				<p class="lead-p">Every place on ${esc(TRIP.familysTrip)} is an exhibit. Wander the galleries, read the placards, listen to the audio guide, and stamp your passport as you visit each one.</p>
+				<div class="passport mt-16">${ringSvg(n, EX_ORDER.length)}<div><b>${esc(TRIP.passport)}</b><div class="small">${n} of ${EX_ORDER.length} exhibits stamped${n === EX_ORDER.length ? " · Complete." : ""}</div></div></div>
 				<input class="search" id="exsearch" type="search" placeholder="Search exhibits, e.g. bison, waterfall, 308 ft" value="${esc(museumQuery)}" aria-label="Search exhibits">
 				<div class="daynav start mt-8"><button class="btn ${favOnly ? "stamped" : ""}" data-favfilter="1" aria-pressed="${favOnly}" ${nFav || favOnly ? "" : "disabled"}>♥ Favorites only (${nFav})</button></div>
 			</section>
@@ -1967,8 +2135,9 @@ function renderMuseum() {
 					<h2>${esc(P[k].name)}</h2>
 					<p>${esc(P[k].intro)}</p>
 				</div>
+				${GUIDE[k] ? `<span class="section-label">The story</span><p class="exstory">${esc(GUIDE[k].story)}</p>` : ""}
 				<span class="section-label">Key facts</span>
-				<ul class="factlist">${P[k].facts.map((f, i) => `<li style="--i:${i + 2}">${esc(f)}</li>`).join("")}</ul>
+				<ul class="factlist">${allFacts(k).map((f, i) => `<li style="--i:${i + 2}">${esc(f)}</li>`).join("")}</ul>
 				${LOOK[k] ? `<div class="lookfor"><span class="section-label">Look for</span><ul class="list">${LOOK[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
 				<div><span class="section-label">On your trip</span>
 					${plans.length ? plans.map(({ d, plan }) => `<div class="plan-line"><b>${d.date}</b> · ${esc(d.title)}${plan[2] ? ' <span class="optflag">Optional</span>' : ""}<br>${esc(plan[1])}</div>`).join("") : '<div class="small">You pass through on the drive.</div>'}
@@ -2013,7 +2182,7 @@ document.getElementById("museum").addEventListener("click", e => {
 	if (t.dataset.speak) {
 		speechSynthesis.cancel();
 		const k = museumAt, look = LOOK[k] ? " Look for: " + LOOK[k].join(". ") + "." : "";
-		speechSynthesis.speak(new SpeechSynthesisUtterance(`Exhibit ${Number(exNo(k))}. ${P[k].name}. ${P[k].intro} Key facts: ${P[k].facts.join(". ")}.${look}`));
+		speechSynthesis.speak(new SpeechSynthesisUtterance(`Exhibit ${Number(exNo(k))}. ${P[k].name}. ${P[k].intro} ${GUIDE[k]?.story || ""} Key facts: ${allFacts(k).join(". ")}.${look}`));
 	}
 	if (t.dataset.hush) speechSynthesis.cancel();
 });
@@ -2078,7 +2247,22 @@ function openDay(id) {
 document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest(".tab"); if (t) showView(t.dataset.view); });
 document.getElementById("cards").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openDay(c.dataset.open); });
 document.getElementById("daybar").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openDay(c.dataset.open); });
+// Day-page audio: one stop at a time; tapping the playing stop again stops it.
+let guideKey = null;
+function speakGuide(btn) {
+	const k = btn.dataset.guide, again = guideKey === k;
+	speechSynthesis.cancel();
+	document.querySelectorAll("[data-guide]").forEach(b => { b.textContent = "▶ Listen"; });
+	guideKey = null;
+	if (again) return;
+	const u = new SpeechSynthesisUtterance(`${P[k].name}. ${P[k].intro} ${GUIDE[k].story} ${GUIDE[k].facts.join(". ")}.`);
+	u.onend = () => { if (guideKey === k) { guideKey = null; btn.textContent = "▶ Listen"; } };
+	guideKey = k; btn.textContent = "■ Stop";
+	speechSynthesis.speak(u);
+}
 document.getElementById("daypage").addEventListener("click", e => {
+	const g = e.target.closest("[data-guide]");
+	if (g) return speakGuide(g);
 	const o = e.target.closest("[data-open]");
 	if (o) return openDay(o.dataset.open);
 	const ex = e.target.closest("[data-exhibit]");
