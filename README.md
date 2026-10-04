@@ -7,7 +7,7 @@ An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip 
 - **Day by day:** each day's timed rundown, stop cards, an expandable route map and a weather forecast for every stop, plus a Thu–Sat swap for picking the Grand Teton day that shows cloud cover and rain at Jenny Lake and Oxbow Bend for each date.
 - **Field log:** a wildlife spotting log that records who spotted each animal and keeps a family tally, plus every day's field notes in one place, downloadable as text.
 - **Checklist & packing:** reconfirmation tasks, an October packing list, and confirmed travel and lodging.
-- **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, and settings (appearance including dark mode, text size, clear saved data).
+- **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, settings (appearance including dark mode, text size, clear saved data), and credits for the photos, maps and weather.
 - **Everywhere:** a Now / Next banner on trip days with the current temperature and any National Weather Service alert, a trip progress bar, search across the whole guide (⌘K / Ctrl+K or `/`), favorite exhibits, badges in the Field log, and share links for days and exhibits.
 - Each day page also has route length, sunrise, sunset and golden-hour times, a field-notes box, and a "Print this day" link. Links like `#day/teton` or `#exhibit/oxbow` open a page directly, and the browser back button works.
 
@@ -55,8 +55,18 @@ All the trip data lives in the `<script>` block of `index.html`:
 - `BOOKINGS`, `CHECKS`: the booking table and the checklist.
 - `B`, `BASEMAP`, `LEGS`: the map. `BASEMAP` is an embedded Esri World Topo snapshot covering exactly the area in `B`, and `LEGS` holds road routes from OSRM (OpenStreetMap) as encoded polylines. Both are pre-rendered, so the maps work offline and inside Slack. For a different region, re-capture the basemap for the new `B` and re-fetch the legs; otherwise the maps fall back to a plain background with straight lines.
 
-Map credits: Basemap © Esri, USGS, NPS and other contributors. Roads © OpenStreetMap contributors, routed with OSRM.
+## Data sources and credits
 
-Photo credits: 27 photos from Wikimedia Commons, used under public-domain and Creative Commons licenses. See [`img/CREDITS.md`](img/CREDITS.md) for each author and license.
+The app's **Tools → Credits** section (link: `#credits`) carries all of these:
+
+| What | Source | Credit line |
+|---|---|---|
+| Photos | 27 photos from Wikimedia Commons, under public-domain and Creative Commons licenses | Each photo's title, author and license, from [`img/CREDITS.md`](img/CREDITS.md) |
+| Basemap | Esri World Topographic Map snapshot | "Basemap © Esri, USGS, NPS and other contributors" |
+| Roads | OpenStreetMap, routed with OSRM | "Roads © OpenStreetMap contributors, routed with OSRM" |
+| Forecasts | [Open-Meteo](https://open-meteo.com/), CC BY 4.0 | "Weather data by Open-Meteo.com", linked, wherever forecasts appear |
+| Alerts | [National Weather Service API](https://www.weather.gov/documentation/services-web-api) | "Alerts: National Weather Service" |
+
+`PHOTO_CREDITS` in `index.html` mirrors `img/CREDITS.md`; update both when you change a photo.
 
 Progress and checkmarks are saved in the browser's `localStorage` under the key `ys-guide2`, and the weather cache under `ys-weather`.

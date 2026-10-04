@@ -485,6 +485,9 @@
 	.wxtable tr.best td { background: var(--accent-soft); }
 	.wx .small a, .wxnow .small a, #wxswap .small a, .wxalerts .small a { color: inherit; }
 	.wxalerts { flex-basis: 100%; padding: 8px 12px; border-left: 3px solid #b5523b; border-radius: var(--r-xs); background: var(--card); }
+	/* Credits */
+	.credits-list { columns: 2 300px; column-gap: 28px; font-size: 13px; }
+	.credits-list li { break-inside: avoid; margin: 0 0 6px; }
 </style>
 </head>
 <body>
@@ -1683,6 +1686,49 @@ function settingsHtml() {
 				: `<button class="btn" data-reset="arm">Clear saved progress…</button>`}</div>`;
 }
 
+// ---------- Credits ----------
+// Photo credits, from img/CREDITS.md: [placeKey, title, source page, author, license, license URL].
+const PHOTO_CREDITS = [
+	["bzn", "Pretty day in Bozeman", "https://commons.wikimedia.org/wiki/File:Pretty_day_in_Bozeman.jpg", "Amy Guth", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0"],
+	["bozeman", "Hotel Bozeman Annex, Main Street, Bozeman, MT - 53770446328", "https://commons.wikimedia.org/wiki/File:Hotel_Bozeman_Annex,_Main_Street,_Bozeman,_MT_-_53770446328.jpg", "w_lemay", "CC BY-SA 2.0", "https://creativecommons.org/licenses/by-sa/2.0"],
+	["livingston", "Livingston, Montana", "https://commons.wikimedia.org/wiki/File:Livingston,_Montana.jpg", "Quintin Soloviev", "CC BY 4.0", "https://creativecommons.org/licenses/by/4.0"],
+	["paradise", "Carbella Rec Area 20161113 (5) (30868426562)", "https://commons.wikimedia.org/wiki/File:Carbella_Rec_Area_20161113_(5)_(30868426562).jpg", "blm_mtdks", "Public domain", ""],
+	["gardiner", "Gardiner MT1", "https://commons.wikimedia.org/wiki/File:Gardiner_MT1.jpg", "Acroterion", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["arch", "Roosevelt Arch YNP1", "https://commons.wikimedia.org/wiki/File:Roosevelt_Arch_YNP1.jpg", "Acroterion", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["mammoth", "Mammoth Hot Springs (78729p)", "https://commons.wikimedia.org/wiki/File:Mammoth_Hot_Springs_(78729p).jpg", "Rhododendrites", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["tower", "Yellowstone River near Tower Fall, Yellowstone National Park, 2009", "https://commons.wikimedia.org/wiki/File:Yellowstone_River_near_Tower_Fall,_Yellowstone_National_Park,_2009.jpg", "DimiTalen", "CC0", "http://creativecommons.org/publicdomain/zero/1.0/deed.en"],
+	["lamar", "Bison, Lamar Valley (92ddfbd2-3b56-4fa5-a714-3057ba96ec2f)", "https://commons.wikimedia.org/wiki/File:Bison,_Lamar_Valley_(92ddfbd2-3b56-4fa5-a714-3057ba96ec2f).jpg", "Neal Herbert", "Public domain", ""],
+	["bigsky", "US Route 191 Bozeman to Big Sky by Gallatin River", "https://commons.wikimedia.org/wiki/File:US_Route_191_Bozeman_to_Big_Sky_by_Gallatin_River.jpg", "Sesamehoneytart", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["westy", "West Yellowstone (MT, USA), Museum of the Yellowstone -- 2022 -- 2386", "https://commons.wikimedia.org/wiki/File:West_Yellowstone_(MT,_USA),_Museum_of_the_Yellowstone_--_2022_--_2386.jpg", "Dietmar Rabich", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["mesa", "Mesa Falls 4", "https://commons.wikimedia.org/wiki/File:Mesa_Falls_4.JPG", "Zechariah Judy", "CC BY 3.0", "https://creativecommons.org/licenses/by/3.0"],
+	["madison", "Madison River (Yellowstone, Wyoming, USA) 3", "https://commons.wikimedia.org/wiki/File:Madison_River_(Yellowstone,_Wyoming,_USA)_3.jpg", "James St. John", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0"],
+	["gibbon", "Yellowstone National Park (WY, USA), Gibbon Falls -- 2022 -- 2649", "https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Gibbon_Falls_--_2022_--_2649.jpg", "Dietmar Rabich", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["norris", "Yellowstone National Park (WY, USA), Norris Geyser Basin -- 2022 -- 2681", "https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Norris_Geyser_Basin_--_2022_--_2681.jpg", "Dietmar Rabich", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["midway", "Aerial image of Grand Prismatic Spring (view from the south)", "https://commons.wikimedia.org/wiki/File:Aerial_image_of_Grand_Prismatic_Spring_(view_from_the_south).jpg", "Carsten Steger", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["oldfaithful", "Yellowstone National Park (WY, USA), Old Faithful Geyser -- 2022 -- 2595", "https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Old_Faithful_Geyser_--_2022_--_2595.jpg", "Dietmar Rabich", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["craig", "Isa Lake (Craig Pass, Yellowstone, Wyoming, USA) 11 (43549145544)", "https://commons.wikimedia.org/wiki/File:Isa_Lake_(Craig_Pass,_Yellowstone,_Wyoming,_USA)_11_(43549145544).jpg", "James St. John", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0"],
+	["canyon", "Grand canyon of Yellowstone and Yellowstone fall nn edit1", "https://commons.wikimedia.org/wiki/File:Grand_canyon_of_Yellowstone_and_Yellowstone_fall_nn_edit1.jpg", "Brocken Inaglory", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0"],
+	["artist", "Lower Falls from Artist Point (19087799399)", "https://commons.wikimedia.org/wiki/File:Lower_Falls_from_Artist_Point_(19087799399).jpg", "Yellowstone National Park from Yellowstone NP, USA", "Public domain", ""],
+	["hayden", "Upper Hayden Valley YNP1", "https://commons.wikimedia.org/wiki/File:Upper_Hayden_Valley_YNP1.jpg", "Acroterion", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"],
+	["mud", "Dragon's Mouth Spring (2) (54265511622)", "https://commons.wikimedia.org/wiki/File:Dragon%27s_Mouth_Spring_(2)_(54265511622).jpg", "YellowstoneNPS", "Public domain", ""],
+	["westthumb", "West Thumb Geysir Basin 2017 27", "https://commons.wikimedia.org/wiki/File:West_Thumb_Geysir_Basin_2017_27.jpg", "Dirtsc", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0"],
+	["south", "Lewis Falls", "https://commons.wikimedia.org/wiki/File:Lewis_Falls.jpg", "MONGO (assumed)", "Public domain", ""],
+	["jackson", "Mount Moran met Black Dike intrusie - Jackson Lake 8-09-2014 12-03-01", "https://commons.wikimedia.org/wiki/File:Mount_Moran_met_Black_Dike_intrusie_-_Jackson_Lake_8-09-2014_12-03-01.JPG", "Paul Hermans", "CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0"],
+	["oxbow", "Oxbow Bend - Grand Teton National Park - Wyoming", "https://commons.wikimedia.org/wiki/File:Oxbow_Bend_-_Grand_Teton_National_Park_-_Wyoming.jpg", "Watts", "CC BY 2.0", "https://creativecommons.org/licenses/by/2.0"],
+	["jenny", "Jenny Lake Cascade Canyon GTNP1", "https://commons.wikimedia.org/wiki/File:Jenny_Lake_Cascade_Canyon_GTNP1.jpg", "Acroterion", "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0"]
+];
+function creditsHtml() {
+	const link = (href, text) => href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text);
+	return `<b class="section-label">Photos</b>
+		<p class="small">From Wikimedia Commons, resized to 960 px wide. Follow a link for the original file; photos under CC BY-SA remain under CC BY-SA.</p>
+		<ul class="list credits-list">${PHOTO_CREDITS.map(([k, title, url, author, lic, licUrl]) =>
+			`<li><b>${esc(P[k].name)}:</b> ${link(url, title)} by ${esc(author)}, ${link(licUrl, lic)}</li>`).join("")}</ul>
+		<b class="section-label">Maps</b>
+		<p class="small">Basemap © Esri, USGS, NPS and other contributors (Esri World Topographic Map). Roads © OpenStreetMap contributors, routed with OSRM.</p>
+		<b class="section-label">Weather</b>
+		<p class="small">Forecasts: ${WX_CREDIT}, licensed CC BY 4.0. Alerts: National Weather Service (weather.gov). The latest forecast is saved on this device so the guide works offline.</p>`;
+}
+
 // ---------- Tools view ----------
 function renderTools() {
 	document.getElementById("tools").innerHTML = `
@@ -1701,6 +1747,7 @@ function renderTools() {
 					<li><b>Road status:</b> <a href="https://www.nps.gov/yell/planyourvisit/parkroads.htm" target="_blank" rel="noopener">Yellowstone</a> · <a href="https://www.nps.gov/grte/planyourvisit/roads.htm" target="_blank" rel="noopener">Grand Teton</a></li>
 				</ul></section>
 			<section class="panel"><div class="kicker">This device</div><h3>Settings</h3><div id="settings">${settingsHtml()}</div></section>
+			<section class="panel span2" id="credits"><div class="kicker">Photos, maps and weather</div><h3>Credits</h3>${creditsHtml()}</section>
 		</div>`;
 }
 const toolsEl = document.getElementById("tools");
@@ -1769,7 +1816,7 @@ toolsEl.addEventListener("submit", e => {
 	document.getElementById("exdesc").focus();
 });
 
-// ---------- Routing: #day/<id>, #exhibit/<key>, #exhibits, #overview, #log, #prep, #tools ----------
+// ---------- Routing: #day/<id>, #exhibit/<key>, #exhibits, #overview, #log, #prep, #tools, #credits ----------
 function hashFor(v) {
 	if (v === "day") return "day/" + currentDay;
 	if (v === "museum") return museumAt ? "exhibit/" + museumAt : "exhibits";
@@ -1781,6 +1828,7 @@ function applyHash() {
 	if (v === "exhibit" && P[arg]) { museumAt = arg; renderMuseum(); return showView("museum", false); }
 	if (v === "exhibits") { museumAt = null; renderMuseum(); return showView("museum", false); }
 	if (["overview", "log", "prep", "tools"].includes(v)) return showView(v, false);
+	if (v === "credits") { showView("tools", false); document.getElementById("credits").scrollIntoView(); }
 }
 window.addEventListener("popstate", applyHash);
 window.addEventListener("hashchange", applyHash);
