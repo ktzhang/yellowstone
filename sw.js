@@ -1,7 +1,7 @@
 // Offline support. On install this saves the guide, its photos, icons and fonts. After that everything is
 // answered from the cache, and the page itself is refreshed in the background when there's signal.
 // If you replace a photo or icon under the same name, bump CACHE so phones fetch it again.
-const CACHE = "trip-guide-v1";
+const CACHE = "trip-guide-v2";
 const PAGE = "./", ROOT = new URL(PAGE, location.href).pathname;
 
 self.addEventListener("install", event => event.waitUntil((async () => {
