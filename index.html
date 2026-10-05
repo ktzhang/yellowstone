@@ -45,9 +45,9 @@
 	.tracks svg { display: block; fill: currentColor; }
 	.tracks .tkf { opacity: .12; }
 	.tracks .tk { opacity: 0; transform-box: fill-box; transform-origin: center; }
-	.tracks .walk .tk { animation: tk-step .6s var(--ease) both; animation-delay: var(--d); }
-	.tracks .fade { opacity: 0; transition: opacity 1s; }
-	@keyframes tk-step { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
+	/* Walking: each print presses in as its animal reaches it, holds, then fades away over the next 15 seconds or so. */
+	.tracks .walk .tk { animation: tk-life 16s var(--ease) both; animation-delay: var(--d); }
+	@keyframes tk-life { 0% { opacity: 0; transform: scale(1.4); } 4% { opacity: 1; transform: none; } 55% { opacity: 1; } 100% { opacity: 0; } }
 	/* The animal that makes each trail, seen from above: legs swing in diagonal pairs, hares and squirrels bound, ravens waddle. */
 	.tracks .tkab { opacity: .5; }
 	.tracks .walk .tka .lg { animation: tka-step var(--gait) ease-in-out infinite alternate; }
@@ -1024,7 +1024,7 @@ const TK_ANIMALS = {
 	squirrel: { step: 52, wander: 16, ms: 240, hop: [["sqH", -8, -8, -12], ["sqH", 8, -8, 12, 1], ["sqF", -3.6, 7, -6], ["sqF", 3.6, 7, 6, 1]] }
 };
 const tkRng = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-function tkTrail(rng, kind, x, y, heading, length, t0) {
+function tkTrail(rng, kind, x, y, heading, length, t0, withAnimal = true) {
 	const a = TK_ANIMALS[kind], s = .9 + rng() * .2, step = a.step * s, phase = rng() * 7, wave = 450 + rng() * 450;
 	let html = "", top = y, bottom = y;
 	const pts = [[x, y]];
@@ -1034,25 +1034,26 @@ function tkTrail(rng, kind, x, y, heading, length, t0) {
 		pts.push([x, y]);
 		top = Math.min(top, y); bottom = Math.max(bottom, y);
 		const feet = a.hop || a.walk.map(([id, ox, oy]) => [id, ox * side, oy, -side * a.toe, side > 0]);
-		html += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(h + 90 + (rng() - .5) * 8).toFixed(1)}) scale(${s.toFixed(2)})"><g class="tk" style="--d:${Math.round(t0 + n * a.ms)}ms">` +
+		html += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(h + 90 + (rng() - .5) * 8).toFixed(1)}) scale(${s.toFixed(2)})"><g class="tk" style="--d:${Math.round(t0 + (n + 1) * a.ms)}ms">` +
 			feet.map(([id, ox, oy, rot = 0, flip]) => `<use href="#tk-${id}" transform="translate(${ox} ${oy})${rot ? ` rotate(${rot})` : ""}${flip ? " scale(-1 1)" : ""}"/>`).join("") + "</g></g>";
 	}
-	// The walker follows the same points, one step per a.ms, so each print appears as the animal reaches it.
+	if (!withAnimal) return { html: `<g class="tkt"><g class="tkf">${html}</g></g>` };
+	// The walker leaves at t0 and takes one step per a.ms along the same points, so it reaches each print as the print appears.
 	const b = TKA[kind], dur = (pts.length - 1) * a.ms, path = "M" + pts.map(([px, py]) => `${px.toFixed(1)} ${py.toFixed(1)}`).join("L");
 	const walker = `<g class="tka${b.hop ? " hop" : ""}${b.waddle ? " waddle" : ""}" opacity="0" style="--gait:${a.ms}ms;--sw:${b.swing || 0}px">` +
 		`<animateMotion path="${path}" dur="${dur}ms" rotate="auto" begin="indefinite" fill="remove"/>` +
 		`<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.04;.94;1" dur="${dur}ms" begin="indefinite" fill="remove"/>` +
 		`<g transform="scale(${(s * b.size).toFixed(2)})"><g class="tkab">${TKA_HTML[kind]}</g></g></g>`;
-	return { html: `<g class="tkt"><g class="tkf">${html}</g>${walker}</g>`, top: top - 60, bottom: bottom + 60, t0, ms: a.ms };
+	return { html: `<g class="tkt"><g class="tkf">${html}</g>${walker}</g>`, dur: t0 + dur };
 }
 const TK_BAND = 900, TK_CUTE = ["fox", "hare", "raven", "squirrel"];
 function tkBand(b, w) {
 	const rng = tkRng(b + 1), top = b * TK_BAND;
 	const across = (kind, t0) => {
 		const ltr = rng() < .5, tilt = (rng() - .5) * 50;
-		return tkTrail(rng, kind, ltr ? -50 : w + 50, top + 60 + rng() * (TK_BAND - 120), (ltr ? 0 : 180) + tilt, (w + 100) / Math.cos(tilt * Math.PI / 180), t0);
+		return tkTrail(rng, kind, ltr ? -50 : w + 50, top + 60 + rng() * (TK_BAND - 120), (ltr ? 0 : 180) + tilt, (w + 100) / Math.cos(tilt * Math.PI / 180), t0, false);
 	};
-	const down = (kind, t0) => tkTrail(rng, kind, 30 + rng() * (w - 60), top - 40, 90 + (rng() - .5) * 60, TK_BAND, t0);
+	const down = (kind, t0) => tkTrail(rng, kind, 30 + rng() * (w - 60), top - 40, 90 + (rng() - .5) * 60, TK_BAND, t0, false);
 	const trails = [across(rng() < .5 ? "bear" : "moose", 200 + rng() * 600)];
 	for (let k = 0; k < (w > 820 ? 2 : 1); k++) {
 		const kind = TK_CUTE[Math.floor(rng() * TK_CUTE.length)], t0 = 600 + rng() * 1200;
@@ -1063,51 +1064,44 @@ function tkBand(b, w) {
 const tracksEl = Object.assign(document.createElement("div"), { className: "tracks" });
 tracksEl.setAttribute("aria-hidden", "true");
 document.body.append(tracksEl);
-let tkW = 0, tkBands = 0, tkTrails = [];
+let tkW = 0, tkStill = null, tkBands = 0;
+const tkWalking = () => document.documentElement.dataset.tracks === "walk" && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+// Walking: animals come and go and their prints fade (see tkSpawn). Still, or reduced motion: fixed faint trails, a set per band of page.
 function tkLayout() {
-	const w = document.documentElement.clientWidth, h = Math.max(document.body.offsetHeight, innerHeight), bands = Math.ceil(h / TK_BAND);
+	const w = document.documentElement.clientWidth, h = Math.max(document.body.offsetHeight, innerHeight), still = !tkWalking();
 	tracksEl.style.height = h + "px";
-	if (w !== tkW) { tkW = w; tkBands = 0; tkTrails = []; tracksEl.innerHTML = `<svg width="${w}" height="0"><defs>${TK_DEFS}</defs></svg>`; }
+	if (w !== tkW || still !== tkStill) { tkW = w; tkStill = still; tkBands = 0; tracksEl.innerHTML = `<svg width="${w}" height="${h}"><defs>${TK_DEFS}</defs></svg>`; }
+	const svg = tracksEl.firstChild;
+	if (!still) return svg.setAttribute("height", h);
+	const bands = Math.ceil(h / TK_BAND);
 	if (bands > tkBands) {
-		const svg = tracksEl.firstChild, fresh = [];
-		for (let b = tkBands; b < bands; b++) fresh.push(...tkBand(b, w));
-		svg.insertAdjacentHTML("beforeend", fresh.map(t => t.html).join(""));
-		const els = svg.querySelectorAll(":scope > .tkt");
-		fresh.forEach((t, i) => t.el = els[tkTrails.length + i]);
-		tkTrails.push(...fresh);
+		for (let b = tkBands; b < bands; b++) svg.insertAdjacentHTML("beforeend", tkBand(b, w).map(t => t.html).join(""));
 		svg.setAttribute("height", bands * TK_BAND);
 		tkBands = bands;
 	}
-	tkWake();
 }
-// Sends the trail's animal along it, timed so it reaches each print as the print appears.
-function tkGo(t) {
-	if (document.documentElement.dataset.tracks !== "walk" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-	const at = Math.max(0, t.t0 - t.ms) / 1000;
-	t.el.querySelectorAll(".tka > animate, .tka > animateMotion").forEach(an => an.beginElementAt(at));
-}
-// A trail walks in when it scrolls into view and resets once it's well out of view, so it walks again next time.
-function tkWake() {
-	const top = scrollY - 150, bottom = scrollY + innerHeight + 150;
-	for (const t of tkTrails) {
-		const on = t.top < bottom && t.bottom > top;
-		if (on && !t.el.classList.contains("walk")) { t.el.classList.add("walk"); tkGo(t); }
-		else if (!on) t.el.classList.remove("walk");
+// Every 6-12 seconds an animal walks a new route across the part of the page in view; its trail is removed once the prints fade.
+function tkSpawn() {
+	setTimeout(tkSpawn, 6000 + Math.random() * 6000);
+	const svg = tracksEl.firstChild, w = tkW, rng = Math.random;
+	if (document.hidden || !tkWalking() || !svg) return;
+	if ([...svg.querySelectorAll(":scope > .walk")].filter(e => +e.dataset.end > Date.now()).length >= (w > 820 ? 2 : 1)) return;
+	const kind = rng() < .4 ? (rng() < .5 ? "bear" : "moose") : TK_CUTE[Math.floor(rng() * TK_CUTE.length)];
+	let t;
+	if (rng() < .3) t = tkTrail(rng, kind, 30 + rng() * (w - 60), scrollY - 60, 90 + (rng() - .5) * 60, innerHeight + 120, 0);
+	else {
+		const ltr = rng() < .5, tilt = (rng() - .5) * 40;
+		t = tkTrail(rng, kind, ltr ? -60 : w + 60, scrollY + 60 + rng() * Math.max(innerHeight - 120, 1), (ltr ? 0 : 180) + tilt, (w + 120) / Math.cos(tilt * Math.PI / 180), 0);
 	}
+	svg.insertAdjacentHTML("beforeend", t.html);
+	const el = svg.lastElementChild;
+	el.dataset.end = Date.now() + t.dur;
+	el.classList.add("walk");
+	el.querySelectorAll(".tka > animate, .tka > animateMotion").forEach(an => an.beginElement());
+	setTimeout(() => el.remove(), t.dur + 17000);
 }
-// Every so often one trail in view fades and walks again.
-function tkWander() {
-	setTimeout(tkWander, 7000 + Math.random() * 7000);
-	if (document.hidden || document.documentElement.dataset.tracks !== "walk" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-	const seen = tkTrails.filter(t => t.top < scrollY + innerHeight && t.bottom > scrollY), t = seen[Math.floor(Math.random() * seen.length)];
-	if (!t) return;
-	t.el.classList.add("fade");
-	setTimeout(() => { t.el.classList.remove("walk", "fade"); t.el.getBoundingClientRect(); t.el.classList.add("walk"); tkGo(t); }, 1100);
-}
-let tkFrame = 0;
-addEventListener("scroll", () => { if (!tkFrame) tkFrame = requestAnimationFrame(() => { tkFrame = 0; tkWake(); }); }, { passive: true });
 new ResizeObserver(tkLayout).observe(document.body);
-setTimeout(tkWander, 5000);
+setTimeout(tkSpawn, 1200);
 
 // ---------- Map ----------
 // Basemap: Esri World Topo snapshot (Web Mercator) of bounds B. Routes: OSRM road geometry over OpenStreetMap,
@@ -2106,7 +2100,7 @@ toolsEl.addEventListener("change", e => {
 	if (e.target.id === "oftime") { store.ofTime = e.target.value; save(); document.getElementById("geyser").innerHTML = geyserHtml(); document.getElementById("oftime").focus(); }
 	if (e.target.id === "settheme") { store.theme = e.target.value; save(); applySettings(); }
 	if (e.target.id === "setsize") { store.textSize = +e.target.value; save(); applySettings(); }
-	if (e.target.id === "settracks") { store.tracks = e.target.value; save(); applySettings(); }
+	if (e.target.id === "settracks") { store.tracks = e.target.value; save(); applySettings(); tkLayout(); }
 });
 toolsEl.addEventListener("submit", e => {
 	if (e.target.id !== "expform") return;
