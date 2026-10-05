@@ -41,16 +41,29 @@
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .28 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 	/* Animal tracks: they scroll with the page just under the paper grain and never take clicks. */
 	.tracks { position: absolute; top: 0; left: 0; width: 100%; overflow: hidden; pointer-events: none; z-index: calc(var(--z-overlay) - 1);
-		color: #6f4f33; opacity: .12; mix-blend-mode: multiply; }
+		color: #6f4f33; mix-blend-mode: multiply; }
 	.tracks svg { display: block; fill: currentColor; }
+	.tracks .tkf { opacity: .12; }
 	.tracks .tk { opacity: 0; transform-box: fill-box; transform-origin: center; }
 	.tracks .walk .tk { animation: tk-step .6s var(--ease) both; animation-delay: var(--d); }
 	.tracks .fade { opacity: 0; transition: opacity 1s; }
 	@keyframes tk-step { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
-	html[data-theme="dark"] .tracks { color: #ead7b6; opacity: .08; mix-blend-mode: screen; }
+	/* The animal that makes each trail, seen from above: legs swing in diagonal pairs, hares and squirrels bound, ravens waddle. */
+	.tracks .tkab { opacity: .38; }
+	.tracks .walk .tka .lg { animation: tka-step var(--gait) ease-in-out infinite alternate; }
+	.tracks .walk .tka .l1 { animation-direction: alternate-reverse; }
+	.tracks .walk .tka.hop .tkab { animation: tka-hop var(--gait) ease-in-out infinite; }
+	.tracks .walk .tka.waddle .tkab { animation: tka-waddle var(--gait) ease-in-out infinite alternate; }
+	@keyframes tka-step { from { transform: translateX(calc(var(--sw) * -1)); } to { transform: translateX(var(--sw)); } }
+	@keyframes tka-hop { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.16, 1.08); } }
+	@keyframes tka-waddle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+	html[data-theme="dark"] .tracks { color: #ead7b6; mix-blend-mode: screen; }
+	html[data-theme="dark"] .tracks .tkf { opacity: .08; }
+	html[data-theme="dark"] .tracks .tkab { opacity: .26; }
 	html[data-tracks="still"] .tracks .tk { opacity: 1; animation: none; }
+	html[data-tracks="still"] .tracks .tka { display: none; }
 	html[data-tracks="off"] .tracks { display: none; }
-	@media (prefers-reduced-motion: reduce) { .tracks .tk { opacity: 1; } }
+	@media (prefers-reduced-motion: reduce) { .tracks .tk { opacity: 1; } .tracks .tka { display: none; } }
 	@media print { .tracks { display: none; } }
 	header { padding: 18px 24px 0; }
 	h1 { margin: 0; font-size: 22px; }
@@ -980,28 +993,54 @@ const TK_SHAPES = {
 	raven: `<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M0 0Q-.6-6.5 0-13M0 0Q-4.5-3.5-7-9M0 0Q4.5-3.5 7-9M0 0Q.3 4 0 8"/>`
 };
 const TK_DEFS = Object.entries(TK_SHAPES).map(([id, s]) => `<g id="tk-${id}">${s}</g>`).join("");
+// The animals themselves, seen from above with the head toward +x and the body centred on the trail.
+// parts: ["e", cx, cy, rx, ry, rotate?] ellipses and ["p", d] paths. legs: [cx, cy, rx, ry, pair]; the two diagonal pairs swing in turn.
+const tkMirror = d => d.replace(/(-?\d*\.?\d+)\s*(-?\d*\.?\d+)/g, (m, x, y) => `${x} ${-parseFloat(y)}`);
+const TKA_ANTLER = "M36-5C33-13 35-23 43-30C45-26 47-27 49-31C50-26 52-27 54-30C56-23 53-15 47-11C43-9 40-7 38-5Z", TKA_FOXEAR = "M15-4.5L12-9.5L18.5-5.5Z";
+const TKA = {
+	bear: { size: 1.3, swing: 6, parts: [["e", -6, 0, 34, 16], ["e", 10, 0, 17, 17.5], ["e", -24, 0, 15, 16], ["e", 31, 0, 11, 10.5], ["e", 41, 0, 7, 5.5], ["e", 26, -8.5, 3.6, 3.6], ["e", 26, 8.5, 3.6, 3.6], ["e", -40, 0, 2.6, 2.6]],
+		legs: [[17, -15, 8, 4.6, 0], [17, 15, 8, 4.6, 1], [-22, -15, 8.5, 5, 1], [-22, 15, 8.5, 5, 0]] },
+	moose: { size: 1.25, swing: 8, parts: [["e", -8, 0, 34, 16], ["e", 10, 0, 18, 15], ["e", 30, 0, 10, 7], ["e", 45, 0, 13, 7], ["e", 57, 0, 7, 6], ["p", TKA_ANTLER], ["p", tkMirror(TKA_ANTLER)], ["e", -42, 0, 3, 2.5]],
+		legs: [[18, -14, 4.5, 3.5, 0], [18, 14, 4.5, 3.5, 1], [-32, -14, 4.8, 3.8, 1], [-32, 14, 4.8, 3.8, 0]] },
+	fox: { size: 1.15, swing: 4, parts: [["e", -2, 0, 18, 7.5], ["e", 17, 0, 8, 6.5], ["p", "M22-3.5L32 0L22 3.5Z"], ["p", TKA_FOXEAR], ["p", tkMirror(TKA_FOXEAR)], ["p", "M-18-3C-28-7-40-7-50-3C-53-1-53 1-50 3C-40 7-28 7-18 3Z"]],
+		legs: [[11, -7, 3.4, 2.6, 0], [11, 7, 3.4, 2.6, 1], [-13, -7, 3.6, 2.8, 1], [-13, 7, 3.6, 2.8, 0]] },
+	raven: { size: 1.2, waddle: true, parts: [["e", 0, 0, 11, 7], ["e", -3, -4, 13, 4.5, -6], ["e", -3, 4, 13, 4.5, 6], ["e", 12, 0, 5, 5], ["p", "M15-2L23 0L15 2Z"], ["p", "M-12-4L-24-6L-27 0L-24 6L-12 4Z"]] },
+	hare: { size: 1.25, hop: true, parts: [["e", -3, 0, 13, 9], ["e", -9, 0, 8, 10], ["e", 12, 0, 6.5, 5], ["e", 2, -7, 9, 2.2, -30], ["e", 2, 7, 9, 2.2, 30], ["e", -17, 0, 3, 3]] },
+	squirrel: { size: 1.3, hop: true, parts: [["e", 0, 0, 9, 5.5], ["e", 10, 0, 5, 4], ["e", 8, -3.6, 1.6, 1.6], ["e", 8, 3.6, 1.6, 1.6], ["p", "M-7-2C-14-7-24-9-30-5C-34-2-33 3-29 5C-22 8-13 6-7 2Z"]] }
+};
+const tkaPart = ([t, ...v]) => t === "e" ? `<ellipse cx="${v[0]}" cy="${v[1]}" rx="${v[2]}" ry="${v[3]}"${v[4] ? ` transform="rotate(${v[4]} ${v[0]} ${v[1]})"` : ""}/>` : `<path d="${v[0]}"/>`;
+const TKA_HTML = Object.fromEntries(Object.entries(TKA).map(([k, a]) => [k,
+	(a.legs || []).map(([x, y, rx, ry, pair]) => `<ellipse class="lg l${pair}" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join("") + a.parts.map(tkaPart).join("")]));
 // Walkers alternate left and right feet; hoppers land a whole group per step. toe > 0 turns toes in; ms paces the walk-in.
 const TK_ANIMALS = {
-	bear: { step: 66, wander: 12, ms: 150, toe: 10, walk: [["bearF", 9, 4], ["bearH", 11, -22]] },
-	moose: { step: 72, wander: 10, ms: 140, toe: -4, walk: [["moose", 7, 0]] },
-	fox: { step: 36, wander: 7, ms: 90, toe: 0, walk: [["fox", 2.5, 0]] },
-	raven: { step: 22, wander: 22, ms: 80, toe: 10, walk: [["raven", 4.5, 0]] },
-	hare: { step: 88, wander: 18, ms: 220, hop: [["hareH", -7, -14, -6], ["hareH", 7, -14, 6, 1], ["hareF", -1.5, 10], ["hareF", 1.8, 21]] },
-	squirrel: { step: 52, wander: 16, ms: 160, hop: [["sqH", -8, -8, -12], ["sqH", 8, -8, 12, 1], ["sqF", -3.6, 7, -6], ["sqF", 3.6, 7, 6, 1]] }
+	bear: { step: 66, wander: 12, ms: 340, toe: 10, walk: [["bearF", 9, 4], ["bearH", 11, -22]] },
+	moose: { step: 72, wander: 10, ms: 320, toe: -4, walk: [["moose", 7, 0]] },
+	fox: { step: 36, wander: 7, ms: 170, toe: 0, walk: [["fox", 2.5, 0]] },
+	raven: { step: 22, wander: 22, ms: 130, toe: 10, walk: [["raven", 4.5, 0]] },
+	hare: { step: 88, wander: 18, ms: 300, hop: [["hareH", -7, -14, -6], ["hareH", 7, -14, 6, 1], ["hareF", -1.5, 10], ["hareF", 1.8, 21]] },
+	squirrel: { step: 52, wander: 16, ms: 240, hop: [["sqH", -8, -8, -12], ["sqH", 8, -8, 12, 1], ["sqF", -3.6, 7, -6], ["sqF", 3.6, 7, 6, 1]] }
 };
 const tkRng = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function tkTrail(rng, kind, x, y, heading, length, t0) {
 	const a = TK_ANIMALS[kind], s = .9 + rng() * .2, step = a.step * s, phase = rng() * 7, wave = 450 + rng() * 450;
 	let html = "", top = y, bottom = y;
+	const pts = [[x, y]];
 	for (let d = 0, n = 0; d < length; d += step, n++) {
 		const h = heading + a.wander * Math.sin(d / wave * 2 * Math.PI + phase), r = h * Math.PI / 180, side = n % 2 ? 1 : -1;
 		x += Math.cos(r) * step; y += Math.sin(r) * step;
+		pts.push([x, y]);
 		top = Math.min(top, y); bottom = Math.max(bottom, y);
 		const feet = a.hop || a.walk.map(([id, ox, oy]) => [id, ox * side, oy, -side * a.toe, side > 0]);
 		html += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(h + 90 + (rng() - .5) * 8).toFixed(1)}) scale(${s.toFixed(2)})"><g class="tk" style="--d:${Math.round(t0 + n * a.ms)}ms">` +
 			feet.map(([id, ox, oy, rot = 0, flip]) => `<use href="#tk-${id}" transform="translate(${ox} ${oy})${rot ? ` rotate(${rot})` : ""}${flip ? " scale(-1 1)" : ""}"/>`).join("") + "</g></g>";
 	}
-	return { html: `<g class="tkt">${html}</g>`, top: top - 40, bottom: bottom + 40 };
+	// The walker follows the same points, one step per a.ms, so each print appears as the animal reaches it.
+	const b = TKA[kind], dur = (pts.length - 1) * a.ms, path = "M" + pts.map(([px, py]) => `${px.toFixed(1)} ${py.toFixed(1)}`).join("L");
+	const walker = `<g class="tka${b.hop ? " hop" : ""}${b.waddle ? " waddle" : ""}" opacity="0" style="--gait:${a.ms}ms;--sw:${b.swing || 0}px">` +
+		`<animateMotion path="${path}" dur="${dur}ms" rotate="auto" begin="indefinite" fill="remove"/>` +
+		`<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.04;.94;1" dur="${dur}ms" begin="indefinite" fill="remove"/>` +
+		`<g transform="scale(${(s * b.size).toFixed(2)})"><g class="tkab">${TKA_HTML[kind]}</g></g></g>`;
+	return { html: `<g class="tkt"><g class="tkf">${html}</g>${walker}</g>`, top: top - 60, bottom: bottom + 60, t0, ms: a.ms };
 }
 const TK_BAND = 900, TK_CUTE = ["fox", "hare", "raven", "squirrel"];
 function tkBand(b, w) {
@@ -1038,10 +1077,20 @@ function tkLayout() {
 	}
 	tkWake();
 }
+// Sends the trail's animal along it, timed so it reaches each print as the print appears.
+function tkGo(t) {
+	if (document.documentElement.dataset.tracks !== "walk" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+	const at = Math.max(0, t.t0 - t.ms) / 1000;
+	t.el.querySelectorAll(".tka > animate, .tka > animateMotion").forEach(an => an.beginElementAt(at));
+}
 // A trail walks in when it scrolls into view and resets once it's well out of view, so it walks again next time.
 function tkWake() {
 	const top = scrollY - 150, bottom = scrollY + innerHeight + 150;
-	for (const t of tkTrails) t.el.classList.toggle("walk", t.top < bottom && t.bottom > top);
+	for (const t of tkTrails) {
+		const on = t.top < bottom && t.bottom > top;
+		if (on && !t.el.classList.contains("walk")) { t.el.classList.add("walk"); tkGo(t); }
+		else if (!on) t.el.classList.remove("walk");
+	}
 }
 // Every so often one trail in view fades and walks again.
 function tkWander() {
@@ -1050,7 +1099,7 @@ function tkWander() {
 	const seen = tkTrails.filter(t => t.top < scrollY + innerHeight && t.bottom > scrollY), t = seen[Math.floor(Math.random() * seen.length)];
 	if (!t) return;
 	t.el.classList.add("fade");
-	setTimeout(() => { t.el.classList.remove("walk", "fade"); t.el.getBoundingClientRect(); t.el.classList.add("walk"); }, 1100);
+	setTimeout(() => { t.el.classList.remove("walk", "fade"); t.el.getBoundingClientRect(); t.el.classList.add("walk"); tkGo(t); }, 1100);
 }
 let tkFrame = 0;
 addEventListener("scroll", () => { if (!tkFrame) tkFrame = requestAnimationFrame(() => { tkFrame = 0; tkWake(); }); }, { passive: true });
