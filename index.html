@@ -49,7 +49,7 @@
 	.tracks .fade { opacity: 0; transition: opacity 1s; }
 	@keyframes tk-step { from { opacity: 0; transform: scale(1.4); } to { opacity: 1; transform: none; } }
 	/* The animal that makes each trail, seen from above: legs swing in diagonal pairs, hares and squirrels bound, ravens waddle. */
-	.tracks .tkab { opacity: .38; }
+	.tracks .tkab { opacity: .5; }
 	.tracks .walk .tka .lg { animation: tka-step var(--gait) ease-in-out infinite alternate; }
 	.tracks .walk .tka .l1 { animation-direction: alternate-reverse; }
 	.tracks .walk .tka.hop .tkab { animation: tka-hop var(--gait) ease-in-out infinite; }
@@ -59,12 +59,15 @@
 	@keyframes tka-waddle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
 	html[data-theme="dark"] .tracks { color: #ead7b6; mix-blend-mode: screen; }
 	html[data-theme="dark"] .tracks .tkf { opacity: .08; }
-	html[data-theme="dark"] .tracks .tkab { opacity: .26; }
+	html[data-theme="dark"] .tracks .tkab { opacity: .36; }
 	html[data-tracks="still"] .tracks .tk { opacity: 1; animation: none; }
 	html[data-tracks="still"] .tracks .tka { display: none; }
 	html[data-tracks="off"] .tracks { display: none; }
 	@media (prefers-reduced-motion: reduce) { .tracks .tk { opacity: 1; } .tracks .tka { display: none; } }
 	@media print { .tracks { display: none; } }
+	.updatebar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: calc(var(--z-overlay) + 1); max-width: calc(100% - 32px);
+		padding: 10px 16px; border-radius: var(--r-sm); background: var(--card); box-shadow: var(--shadow-lift); font-size: 14px; }
+	@media print { .updatebar { display: none; } }
 	header { padding: 18px 24px 0; }
 	h1 { margin: 0; font-size: 22px; }
 	h2, h3 { margin: 0; }
@@ -1094,7 +1097,7 @@ function tkWake() {
 }
 // Every so often one trail in view fades and walks again.
 function tkWander() {
-	setTimeout(tkWander, 12000 + Math.random() * 14000);
+	setTimeout(tkWander, 7000 + Math.random() * 7000);
 	if (document.hidden || document.documentElement.dataset.tracks !== "walk" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 	const seen = tkTrails.filter(t => t.top < scrollY + innerHeight && t.bottom > scrollY), t = seen[Math.floor(Math.random() * seen.length)];
 	if (!t) return;
@@ -1104,7 +1107,7 @@ function tkWander() {
 let tkFrame = 0;
 addEventListener("scroll", () => { if (!tkFrame) tkFrame = requestAnimationFrame(() => { tkFrame = 0; tkWake(); }); }, { passive: true });
 new ResizeObserver(tkLayout).observe(document.body);
-setTimeout(tkWander, 9000);
+setTimeout(tkWander, 5000);
 
 // ---------- Map ----------
 // Basemap: Esri World Topo snapshot (Web Mercator) of bounds B. Routes: OSRM road geometry over OpenStreetMap,
@@ -1929,13 +1932,23 @@ async function updateOffline() {
 try {
 	if (/^https?:$/.test(location.protocol) && "serviceWorker" in navigator) {
 		swState = "pending";
-		navigator.serviceWorker.addEventListener("message", updateOffline);
+		navigator.serviceWorker.addEventListener("message", e => e.data === "updated" ? showUpdated() : updateOffline());
 		navigator.serviceWorker.register("sw.js").then(() => {
 			document.head.append(Object.assign(document.createElement("link"), { rel: "manifest", href: "manifest.webmanifest" }));
 			swState = "on";
 		}, () => { swState = "off"; }).then(updateOffline);
 	}
 } catch (e) { swState = "off"; }
+
+// A newer version was saved while this one was showing: offer to switch to it.
+function showUpdated() {
+	if (document.getElementById("updatebar")) return;
+	const bar = Object.assign(document.createElement("div"), { id: "updatebar", className: "updatebar" });
+	bar.setAttribute("role", "status");
+	bar.innerHTML = `The guide has been updated. <button class="linkish" type="button">Reload</button>`;
+	bar.querySelector("button").onclick = () => location.reload();
+	document.body.append(bar);
+}
 
 // ---------- Tools: settings ----------
 function applySettings() {

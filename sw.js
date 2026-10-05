@@ -1,7 +1,7 @@
 // Offline support. On install this saves the guide, its photos, icons and fonts. After that everything is
 // answered from the cache, and the page itself is refreshed in the background when there's signal.
 // If you replace a photo or icon under the same name, bump CACHE so phones fetch it again.
-const CACHE = "trip-guide-v2";
+const CACHE = "trip-guide-v3";
 const PAGE = "./", ROOT = new URL(PAGE, location.href).pathname;
 
 self.addEventListener("install", event => event.waitUntil((async () => {
@@ -49,8 +49,14 @@ self.addEventListener("fetch", event => {
 		const cache = await caches.open(CACHE);
 		const hit = await cache.match(key, { ignoreVary: true });
 		if (hit && !nav) return hit;
-		const fresh = fetch(req).then(async res => {
-			if (res.ok) await cache.put(key, res.clone());
+		// The page is checked against the server, not the browser's HTTP cache, so a new version is saved on the first
+		// visit after it's published. An open page is told, so it can offer a reload.
+		const ver = r => r.headers.get("etag") || r.headers.get("last-modified");
+		const fresh = fetch(nav ? new Request(req.url, { cache: "no-cache", credentials: "same-origin" }) : req).then(async res => {
+			if (res.ok) {
+				await cache.put(key, res.clone());
+				if (nav && hit && ver(res) && ver(res) !== ver(hit)) (await self.clients.get(event.resultingClientId || event.clientId))?.postMessage("updated");
+			}
 			return res;
 		});
 		if (!hit) return fresh;
