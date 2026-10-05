@@ -1,6 +1,6 @@
-# Zhang Family Trip Guide: Yellowstone & Grand Teton
+# Yellowstone & Grand Teton Trip Guide
 
-An interactive single-file web app for the Zhang family's Oct 3–12, 2026 trip with Kevin, Elena, Bing, Ken and Helen. It has:
+An interactive single-file web app for a family trip to Yellowstone and Grand Teton, Oct 3–12, 2026. It has:
 
 - **Trip overview:** a map of the whole trip with every day's route, plus the travelers. On wide screens the day list sits beside the map, and **Expand map** opens it full-screen.
 - **Explore exhibits:** a museum-style tour where every place is an exhibit, grouped into five galleries. Each exhibit has a placard, key facts, things to look for and an audio guide, and you can stamp a trip passport as you visit.
