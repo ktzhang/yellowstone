@@ -75,7 +75,7 @@ The app's **Tools → Credits** section (link: `#credits`) carries all of these:
 
 | What | Source | Credit line |
 |---|---|---|
-| Photos | 28 photos from Wikimedia Commons, under public-domain and Creative Commons licenses | Each photo's title, author and license, from [`img/CREDITS.md`](img/CREDITS.md) |
+| Photos | 29 photos from Wikimedia Commons, under public-domain and Creative Commons licenses | Each photo's title, author and license, from [`img/CREDITS.md`](img/CREDITS.md) |
 | Basemap | Esri World Topographic Map snapshot | "Basemap © Esri, USGS, NPS and other contributors" |
 | Roads | OpenStreetMap, routed with OSRM | "Roads © OpenStreetMap contributors, routed with OSRM" |
 | Forecasts | [Open-Meteo](https://open-meteo.com/), CC BY 4.0 | "Weather data by Open-Meteo.com", linked, wherever forecasts appear |
