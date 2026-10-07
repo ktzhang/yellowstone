@@ -824,22 +824,22 @@ const FIXED = [
 		stops: [["gardiner", "Check out; lunch here or on the way north."], ["chico", "Afternoon soak in the outdoor pools."], ["bozeman", "Dinner and groceries."], ["bzn", "Pick up {{guests}} ({{arrComma}}10:25 p.m.)."], ["bigsky", "US-191 through Gallatin Canyon."], ["islandpark", "Overnight self-check-in."]],
 		dyk: ["Chico's spring water comes out of the ground at about 113°F; the pools run cooler, from about 96°F to 104°F.", "Tonight's drive crosses from Montana into Idaho at Targhee Pass, right on the Continental Divide. Both states are on Mountain Time here, so there's no clock change."],
 		tips: ["Bring swimsuits, and check Chico's pool hours before you leave Gardiner.", "Leave Chico by about 5 p.m. to have dinner in Bozeman well before the pickup.", "Keep the soak comfortable: there's still a 2½–3 hour drive after the 10:25 p.m. pickup, so use a rested driver.", "Reconfirm {{arr}} before heading to the airport.", "Confirm overnight access with the host; checking into Island Park before the pickup would add a lot of backtracking."] },
-	{ id: "oct6", iso: "2026-10-06", date: "Tue Oct 6", kind: "optional", hero: "mesa", title: "Mesa Falls & Island Park", route: "Island Park → Upper & Lower Mesa Falls → Island Park",
-		intro: "{{Guests}} work today. Sleep in after the late arrival; anyone free can take a short trip to the waterfalls.",
-		leave: "Sleep in; falls ≈ noon", drive: "Short local drive", stay: "Airbnb, Island Park",
-		path: ["islandpark", "mesa", "islandpark"],
-		schedule: [["Morning", "Sleep in after the late arrival"], ["≈Noon", "Optional: Upper Mesa Falls and the Lower Mesa Falls viewpoint"], ["Afternoon", "Groceries; rest at the Airbnb"], ["Evening", "Early dinner"]],
-		stops: [["mesa", "Upper Mesa Falls and the Lower Mesa Falls viewpoint, if road access permits.", true], ["islandpark", "Otherwise rest, get groceries and have an early dinner."]],
+	{ id: "oct6", iso: "2026-10-06", date: "Tue Oct 6", kind: "optional", hero: "midway", title: "First look: Old Faithful & Grand Prismatic", route: "Island Park → West Yellowstone → Grand Prismatic → Old Faithful → Island Park",
+		intro: "While {{guests}} worked, a first look at Grand Prismatic and Old Faithful. Everyone goes back together on Thursday.",
+		leave: "After a slow morning", drive: "≈1½ h each way", stay: "Airbnb, Island Park",
+		path: ["islandpark", "westy", "madison", "midway", "oldfaithful", "madison", "westy", "islandpark"],
+		schedule: [["Morning", "Sleep in after the late arrival"], ["Midday", "Drive in through the West Entrance"], ["Afternoon", "Grand Prismatic and Old Faithful"], ["Evening", "Back to Island Park"]],
+		stops: [["midway", "Grand Prismatic from the Midway boardwalk."], ["oldfaithful", "Old Faithful and the Upper Geyser Basin."]],
 		dyk: ["Island Park sits inside an old caldera, an earlier chapter of the same volcanic hotspot that now powers Yellowstone."],
-		tips: ["Confirm reliable Wi-Fi with the host for the workdays."] },
-	{ id: "oct7", iso: "2026-10-07", date: "Wed Oct 7", kind: "optional", hero: "norris", title: "Optional Norris or local day", route: "Island Park → West Entrance → Madison → Norris → Gibbon Falls → return",
-		intro: "Another workday for {{guests}}. Those who are free can preview the thermal country at Norris, or keep it local.",
-		leave: "Flexible", drive: "Optional", stay: "Airbnb, Island Park",
+		tips: ["On Thursday, try what you skipped today, like the overlook trail above Grand Prismatic or a longer Upper Geyser Basin walk."] },
+	{ id: "oct7", iso: "2026-10-07", date: "Wed Oct 7", kind: "optional", hero: "norris", title: "Shopping, then Norris", route: "Island Park → West Yellowstone → Madison → Norris → Gibbon Falls → return",
+		intro: "Another workday for {{guests}}. Shopping and a homemade lunch in the morning, then Norris Geyser Basin in the afternoon.",
+		leave: "≈1 p.m.", drive: "≈1½ h each way", stay: "Airbnb, Island Park",
 		path: ["islandpark", "westy", "madison", "gibbon", "norris", "gibbon", "madison", "westy", "islandpark"],
-		schedule: [["Flexible", "Optional drive in via the West Entrance"], ["Midday", "Porcelain Basin loop at Norris"], ["Return", "Gibbon Falls pullout"], ["Evening", "Fuel up, pack lunches, check the forecast for Thu–Sat"]],
-		stops: [["norris", "Porcelain Basin loop.", true], ["gibbon", "Stop on the return.", true], ["westy", "Fill the tank for the next three days."]],
+		schedule: [["Morning", "Shopping, then lunch at the Airbnb"], ["≈1 p.m.", "Drive to Norris via West Yellowstone and Madison (≈1½ h)"], ["≈2:30 p.m.", "Norris: Porcelain Basin, then Back Basin if there's time (≈2 h)"], ["≈4:30 p.m.", "Gibbon Falls pullout on the way back"], ["Evening", "Fuel up, pack lunches, check the forecast for Thu–Sat"]],
+		stops: [["norris", "Porcelain Basin first, then Back Basin if there's time."], ["gibbon", "Quick stop on the way back.", true], ["westy", "Fill the tank for the next three days."]],
 		dyk: ["Norris sits where three major faults intersect, which is one reason it's the hottest basin in the park."],
-		tips: ["Save Old Faithful, Grand Prismatic and the other main sights for Thursday onward.", "Look at the forecast and pick the Grand Teton day."] }
+		tips: ["Grand Teton is Friday this time, and Canyon moves to Saturday.", "Thursday is Old Faithful and Grand Prismatic again with everyone."] }
 ];
 
 const SHARED = {
@@ -904,7 +904,7 @@ const CHECKS = [
 	["arrival", "Reconfirm {{arr}} before pickup", "Mon Oct 5"],
 	["chico", "Check Chico Hot Springs pool hours", "Mon Oct 5"],
 	["fuel", "Pack lunches and fill the tank for Thu–Sat", "Wed Oct 7"],
-	["teton", "Pick the clearest of Oct 8–10 for Grand Teton", "Wed Oct 7"],
+	["teton", "Check Friday's Grand Teton forecast and the South Entrance road", "Thu Oct 8"],
 	["roads", "Check both parks' roads (Craig Pass, South Entrance) each morning", "Daily"],
 	["roads11", "Check park roads and snow for the Norris–Mammoth drive", "Sun Oct 11"],
 	["flights", "Reconfirm {{flights}}", "Oct 10"]
@@ -926,7 +926,7 @@ document.title = TRIP.title;
 let store = {};
 try { store = JSON.parse(localStorage.getItem("ys-guide2") || "{}"); } catch (e) {}
 const save = () => { try { localStorage.setItem("ys-guide2", JSON.stringify(store)); } catch (e) {} };
-let order = Array.isArray(store.order) && store.order.length === 3 ? store.order : ["geysers", "canyon", "teton"];
+let order = Array.isArray(store.order) && store.order.length === 3 ? store.order : ["geysers", "teton", "canyon"];
 let currentDay = store.day || "oct3";
 let hoverDay = null;
 
@@ -1335,6 +1335,7 @@ function renderDay() {
 						<p class="story">${esc(GUIDE[key].story)}</p>
 						<ul class="morefacts">${GUIDE[key].facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
 						${"speechSynthesis" in window ? `<button class="linkish" data-guide="${key}">▶ Listen</button>` : ""}</div>` : ""}
+					${knowHtml(key, "guide")}
 					<button class="btn" data-exhibit="${key}">View exhibit ${exNo(key)} →</button>
 				</div>
 			</article>`).join("")}</div>
@@ -2025,7 +2026,9 @@ function creditsHtml() {
 		<b class="section-label">Maps</b>
 		<p class="small">Basemap © Esri, USGS, NPS and other contributors (Esri World Topographic Map). Roads © OpenStreetMap contributors, routed with OSRM.</p>
 		<b class="section-label">Weather</b>
-		<p class="small">Forecasts: ${WX_CREDIT}, licensed CC BY 4.0. Alerts: National Weather Service (weather.gov). The latest forecast is saved on this device so the guide works offline.</p>`;
+		<p class="small">Forecasts: ${WX_CREDIT}, licensed CC BY 4.0. Alerts: National Weather Service (weather.gov). The latest forecast is saved on this device so the guide works offline.</p>
+		<b class="section-label">Tips</b>
+		<p class="small">"Good to know" tips draw on National Park Service visitor information: operating hours, geyser predictions and trail pages, as of October 2026.</p>`;
 }
 
 // ---------- Tools view ----------
@@ -2095,7 +2098,7 @@ toolsEl.addEventListener("click", e => {
 	}
 	const r = e.target.closest("[data-reset]");
 	if (r) {
-		if (r.dataset.reset === "confirm") { store = {}; save(); order = ["geysers", "canyon", "teton"]; quiz = { i: 0, score: 0, answered: null }; applySettings(); renderMuseum(); renderOverview(); renderDay(); renderPrep(); }
+		if (r.dataset.reset === "confirm") { store = {}; save(); order = ["geysers", "teton", "canyon"]; quiz = { i: 0, score: 0, answered: null }; applySettings(); renderMuseum(); renderOverview(); renderDay(); renderPrep(); }
 		resetArmed = r.dataset.reset === "arm";
 		document.getElementById("settings").innerHTML = settingsHtml();
 		return document.querySelector("#settings [data-reset]")?.focus();
@@ -2217,6 +2220,28 @@ const GUIDE = {
 	oxbow: { story: "The dark mass behind the bend is Mount Moran. Its flanks are gneiss, darker than the pale granite of the central peaks, and a stripe of diabase on its east face formed when molten rock squeezed into cracks about 765 million years ago. Its summit still wears a cap of Flathead sandstone, a layer worn away from the other high peaks. Here the Snake spreads into some of the park's largest wetlands, Pacific Creek and Buffalo Fork join it near Moran, and in early October the aspens along the bank often turn gold.", facts: ["Mount Moran rises ≈6,000 ft above Jackson Lake", "Mount Moran was first climbed in 1922", "Skillet Glacier shows plainly on Moran's east face"] },
 	jenny: { story: "The name dates to 1872, when English-born trapper Richard \"Beaver Dick\" Leigh guided the Hayden survey through the Tetons, and the survey named nearby Leigh Lake for him and this one for his wife. In 1876 Jenny and their children died of smallpox. The glacier that carved Cascade Canyon pushed rock debris into a terminal moraine, and that ridge holds the lake in today. The canyon runs west between Teewinot and Mount Owen on the south and Symmetry Spire on the north. In the late 1950s, climber John Gill started bouldering near the lake.", facts: ["Hidden Falls, just west of the lake, drops ≈100 feet", "The Jenny Lake Trail loops 7.1 miles around the lake", "Lake Solitude, at the head of Cascade Canyon's North Fork, sits at 9,035 ft"] }
 };
+// ---------- Good to know: practical tips for the busiest stops, from NPS visitor information (October 2026) ----------
+const KNOW = {
+	norris: [
+		"Two loops start at the same trailhead: Porcelain Basin, a short, open and steamy loop under a mile, and Back Basin, about 1½ miles through the trees past Steamboat. Do Porcelain first if time is short.",
+		"Don't count on Steamboat, the world's tallest active geyser: its big eruptions are irregular, sometimes years apart.",
+		"Norris water is acidic, unlike most of the park's basins, and the crust is especially fragile. Stay on the boardwalks.",
+		"The museum and store here closed for the season on Oct 3, so bring water and snacks."
+	],
+	oldfaithful: [
+		"Check the next eruption time at the visitor center, the lodges or in the NPS app, and get there 15–20 minutes early for a good spot; predictions are good to about ±10 minutes.",
+		"Rangers also predict Castle, Grand, Daisy and Riverside geysers nearby, so fill the wait with a walk along the Upper Geyser Basin boardwalk.",
+		"For lunch, the Old Faithful Inn's Bear Paw Deli and dining room are open through Oct 19 and the Snow Lodge's Geyser Grill through Oct 31; the Lodge cafeteria closed Oct 4.",
+		"Even if you're not staying, step into the Old Faithful Inn's log lobby, built in the winter of 1903–04."
+	],
+	midway: [
+		"For the famous view from above, take the overlook trail from the Fairy Falls trailhead, 1 mile south of Midway: 0.6 mile and 105 feet of climb each way, 1–2 hours in all. Parking there is very limited.",
+		"Go on a sunny, warmer afternoon: on cold mornings the steam hides the colors.",
+		"Hold on to hats on the Midway boardwalk; the wind blows them into the springs.",
+		"The colors come from microbial mats that change with the seasons, so they may not match summer photos."
+	]
+};
+const knowHtml = (k, cls) => KNOW[k] ? `<div class="${cls}"><span class="section-label">Good to know</span><ul class="${cls === "guide" ? "morefacts" : "list"}">${KNOW[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
 const allFacts = k => [...P[k].facts, ...(GUIDE[k]?.facts || [])];
 const EX_ORDER = ROOMS.flatMap(r => r.items);
 const roomOf = k => ROOMS.find(r => r.items.includes(k));
@@ -2321,6 +2346,7 @@ function renderMuseum() {
 				<span class="section-label">Key facts</span>
 				<ul class="factlist">${allFacts(k).map((f, i) => `<li style="--i:${i + 2}">${esc(f)}</li>`).join("")}</ul>
 				${LOOK[k] ? `<div class="lookfor"><span class="section-label">Look for</span><ul class="list">${LOOK[k].map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+				${knowHtml(k, "lookfor")}
 				<div><span class="section-label">On your trip</span>
 					${plans.length ? plans.map(({ d, plan }) => `<div class="plan-line"><b>${d.date}</b> · ${esc(d.title)}${plan[2] ? ' <span class="optflag">Optional</span>' : ""}<br>${esc(plan[1])}</div>`).join("") : '<div class="small">You pass through on the drive.</div>'}
 					<div class="visits">${visits.map(d => `<button style="--k:${KIND[d.kind].color}" data-open="${d.id}">Open ${d.date.slice(4)} →</button>`).join("")}</div>

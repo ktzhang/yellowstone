@@ -10,7 +10,7 @@ An interactive single-file web app for a family trip to Yellowstone and Grand Te
 - **Tools:** Old Faithful eruption countdown, trip trivia quiz with a family scoreboard, expense splitter with settle-up, safety and useful info, settings (appearance including dark mode, text size, animal tracks, clear saved data), and credits for the photos, maps and weather.
 - **Everywhere:** a Now / Next banner on trip days with the current temperature and any National Weather Service alert, a trip progress bar, search across the whole guide (⌘K / Ctrl+K or `/`), favorite exhibits, badges in the Field log, share links for days and exhibits, and every few seconds a bear, moose, fox, hare, squirrel or raven, seen from above, walking across the page and leaving tracks that slowly fade (Walking, Still or Off in Settings).
 - **Offline:** opened from a website, the guide saves itself, its photos and fonts on the device and keeps working without signal. It can also be added to the home screen.
-- Each day page also has route length, sunrise, sunset and golden-hour times, a field-notes box, and a "Print this day" link. Links like `#day/teton` or `#exhibit/oxbow` open a page directly, and the browser back button works.
+- Each day page also has "Good to know" tips at the busiest stops (Norris, Old Faithful, Grand Prismatic), route length, sunrise, sunset and golden-hour times, a field-notes box, and a "Print this day" link. Links like `#day/teton` or `#exhibit/oxbow` open a page directly, and the browser back button works.
 
 Exhibit groupings live in `ROOMS`, and the "Look for" lists in `LOOK`.
 
